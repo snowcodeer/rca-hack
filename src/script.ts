@@ -207,9 +207,10 @@ function getHemisphereFromCameraPosition(camera: THREE.Camera, planetName: strin
 
 // Hemisphere-based fun facts system - two tooltips per planet
 let currentPlanet = "";
-let currentHemisphere = "";
 let northernTooltipVisible = false;
 let southernTooltipVisible = false;
+let lastCameraPosition = new THREE.Vector3();
+let hasUserMoved = false;
 
 function updateFunFacts(planetName: string) {
   // Hide all existing tooltips when switching planets
@@ -218,15 +219,22 @@ function updateFunFacts(planetName: string) {
     currentPlanet = planetName;
     northernTooltipVisible = false;
     southernTooltipVisible = false;
-    
-    // Add a small delay to ensure smooth transition
-    setTimeout(() => {
-      showTooltipForCurrentHemisphere(planetName);
-    }, 100);
+    hasUserMoved = false;
+    lastCameraPosition.copy(fakeCamera.position);
     return;
   }
   
-  showTooltipForCurrentHemisphere(planetName);
+  // Check if user has moved the camera
+  const cameraMoved = fakeCamera.position.distanceTo(lastCameraPosition) > 0.1;
+  if (cameraMoved) {
+    hasUserMoved = true;
+    lastCameraPosition.copy(fakeCamera.position);
+  }
+  
+  // Only show tooltips after user has moved the camera
+  if (hasUserMoved) {
+    showTooltipForCurrentHemisphere(planetName);
+  }
 }
 
 function showTooltipForCurrentHemisphere(planetName: string) {
@@ -682,8 +690,8 @@ const changeFocus = (oldFocus: string, newFocus: string) => {
       }, 50);
     }
     
-  // Start fun facts for the new planet (including Sun)
-  updateFunFacts(newFocus);
+    // Start fun facts for the new planet (including Sun) - will show when user moves
+    updateFunFacts(newFocus);
   }, 100);
 };
 
@@ -1103,10 +1111,8 @@ eventBus.emit("focusChanged", {
   const currentBody = solarSystem[options.focus];
   currentBody.labels.update(fakeCamera);
 
-  // Update fun facts based on current hemisphere (only if planet hasn't changed)
-  if (currentPlanet === options.focus) {
-    showTooltipForCurrentHemisphere(options.focus);
-  }
+  // Update fun facts based on current hemisphere
+  updateFunFacts(options.focus);
 
   // Check feature visibility
   checkFeatureVisibility();
@@ -1118,3 +1124,4 @@ eventBus.emit("focusChanged", {
   // Call tick again on the next frame
   window.requestAnimationFrame(tick);
 })();
+
