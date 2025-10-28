@@ -305,54 +305,21 @@ canvas {
   border: 2px solid rgba(136, 204, 255, 0.6);
   padding: 20px 24px;
   margin: 0;
+  border-radius: 0;
   box-shadow: 
     0 8px 32px rgba(136, 204, 255, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-.tooltip-frame::before {
-  content: '';
-  position: absolute;
-  top: -12px;
-  left: -12px;
-  width: 24px;
-  height: 24px;
-  border-top: 4px solid #ffffff;
-  border-left: 4px solid #ffffff;
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
-}
-
-.tooltip-frame::after {
-  content: '';
-  position: absolute;
-  bottom: -12px;
-  right: -12px;
-  width: 24px;
-  height: 24px;
-  border-bottom: 4px solid #ffffff;
-  border-right: 4px solid #ffffff;
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
-}
 
 .tooltip-header {
   display: flex;
   align-items: center;
   margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #88ccff;
+  padding-bottom: 0;
   position: relative;
 }
 
-.tooltip-header::before {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, #88ccff, transparent);
-  box-shadow: 0 0 6px #88ccff;
-}
 
 .tooltip-icon {
   width: 18px;
@@ -441,5 +408,234 @@ canvas {
   max-width: 240px;
   text-shadow: 0 0 4px #88ccff;
   font-family: 'Courier New', 'Monaco', 'Consolas', monospace;
+}
+
+/* Feature Tooltips - Right Side Independent */
+.feature-tooltip {
+  position: fixed;
+  top: 50%;
+  right: 20px;
+  width: 320px;
+  background: rgba(0, 0, 0, 0.9);
+  border: 2px solid #88ccff;
+  border-radius: 0;
+  padding: 0;
+  font-family: 'Courier New', 'Monaco', 'Consolas', monospace;
+  color: #88ccff;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: 
+    0 8px 32px rgba(136, 204, 255, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  z-index: 1000;
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.feature-tooltip-content {
+  padding: 16px 20px;
+  position: relative;
+}
+
+.feature-tooltip-icon {
+  font-size: 24px;
+  margin-right: 12px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.feature-tooltip-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #88ccff;
+  text-shadow: 0 0 8px #88ccff;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.feature-tooltip-description {
+  font-size: 12px;
+  color: #aaccff;
+  line-height: 1.4;
+  text-shadow: 0 0 4px #88ccff;
+  margin-top: 6px;
+}
+
+/* Hemisphere Tooltip - Right Side */
+.hemisphere-tooltip {
+  position: fixed;
+  top: 50%;
+  right: 20px;
+  width: 350px;
+  background: rgba(0, 0, 0, 0.9);
+  border: 2px solid #88ccff;
+  border-radius: 8px;
+  padding: 0;
+  font-family: 'Courier New', 'Monaco', 'Consolas', monospace;
+  color: #88ccff;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: 
+    0 8px 32px rgba(136, 204, 255, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  z-index: 1000;
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.hemisphere-tooltip-content {
+  padding: 20px 24px;
+  position: relative;
+}
+
+.hemisphere-tooltip-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #88ccff;
+  text-shadow: 0 0 8px #88ccff;
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(136, 204, 255, 0.3);
+  padding-bottom: 8px;
+}
+
+.hemisphere-tooltip-facts {
+  margin-bottom: 16px;
+}
+
+.hemisphere-tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  background: rgba(136, 204, 255, 0.03);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-left: 2px solid #88ccff;
+  position: relative;
+  clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+  transition: all 0.2s ease;
+  font-family: 'Courier New', 'Monaco', 'Consolas', monospace;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.hemisphere-tooltip-row::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, #88ccff, transparent);
+  box-shadow: 0 0 4px #88ccff;
+}
+
+.hemisphere-tooltip-label {
+  font-size: 10px;
+  color: #66aaff;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  min-width: 90px;
+  font-family: 'Courier New', 'Monaco', 'Consolas', monospace;
+}
+
+.hemisphere-tooltip-value {
+  font-size: 11px;
+  color: #88ccff;
+  font-weight: 500;
+  text-align: right;
+  max-width: 240px;
+  text-shadow: 0 0 4px #88ccff;
+  font-family: 'Courier New', 'Monaco', 'Consolas', monospace;
+}
+
+/* Fun Facts Tooltip - Random Positions with Lines */
+.fun-fact-tooltip {
+  position: fixed;
+  width: 300px;
+  background: rgba(0, 0, 0, 0.9);
+  border: 2px solid #88ccff;
+  border-radius: 0;
+  padding: 0;
+  font-family: 'Courier New', 'Monaco', 'Consolas', monospace;
+  color: #88ccff;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: 
+    0 8px 32px rgba(136, 204, 255, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  z-index: 999; /* Lower than main tooltip (1000) */
+  opacity: 0;
+  transition: all 0.4s ease;
+  pointer-events: none;
+  max-width: 300px;
+  word-wrap: break-word;
+}
+
+.fun-fact-content {
+  padding: 16px 20px;
+  position: relative;
+}
+
+.fun-fact-planet {
+  font-size: 12px;
+  font-weight: 600;
+  color: #66aaff;
+  text-shadow: 0 0 6px #66aaff;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  text-align: center;
+  border-bottom: 1px solid rgba(136, 204, 255, 0.3);
+  padding-bottom: 6px;
+}
+
+.fun-fact-text {
+  font-size: 13px;
+  color: #aaccff;
+  line-height: 1.4;
+  text-shadow: 0 0 4px #88ccff;
+  text-align: center;
+  font-weight: 400;
+}
+
+.fun-fact-line {
+  position: absolute;
+  height: 2px;
+  background: linear-gradient(90deg, #88ccff, transparent);
+  box-shadow: 0 0 8px #88ccff;
+  opacity: 0.6;
+  animation: pulse 2s ease-in-out infinite;
+  top: 50%;
+  left: 100%;
+  transform-origin: left center;
+}
+
+.fun-fact-line::before {
+  content: '';
+  position: absolute;
+  right: -6px;
+  top: -4px;
+  width: 8px;
+  height: 8px;
+  background: #88ccff;
+  border-radius: 50%;
+  box-shadow: 0 0 12px #88ccff;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
 }
 

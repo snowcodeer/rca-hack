@@ -56,6 +56,506 @@ window.addEventListener("resize", () => {
 // Solar system
 const [solarSystem, planetNames] = createSolarSystem(scene);
 
+// Hemisphere detection system
+interface HemisphereData {
+  name: string;
+  facts: Array<{
+    label: string;
+    value: string;
+  }>;
+}
+
+// Fun facts system for all planets
+const planetFunFacts: Record<string, string[]> = {
+  "sun": [
+    "The Sun contains 99.86% of the solar system's mass!",
+    "Every second, the Sun converts 4 million tons of matter into energy.",
+    "The Sun's core temperature is 15 million°C (27 million°F).",
+    "Light from the Sun takes 8 minutes and 20 seconds to reach Earth.",
+    "The Sun is actually white, not yellow - it appears yellow due to Earth's atmosphere."
+  ],
+  "mercury": [
+    "Mercury has no atmosphere, so it can't trap heat from the Sun.",
+    "A day on Mercury lasts 176 Earth days - longer than its year!",
+    "Mercury is shrinking! The planet is getting smaller due to cooling.",
+    "Despite being closest to the Sun, Mercury isn't the hottest planet.",
+    "Mercury has the most extreme temperature variations in the solar system."
+  ],
+  "venus": [
+    "Venus rotates backwards compared to most planets!",
+    "A day on Venus is longer than its year (243 vs 225 Earth days).",
+    "Venus is the hottest planet at 462°C (864°F) - hotter than Mercury!",
+    "Venus has acid rain made of sulfuric acid.",
+    "The pressure on Venus is 92 times greater than Earth's surface."
+  ],
+  "earth": [
+    "Earth is the only known planet with life in the universe.",
+    "71% of Earth's surface is covered by water.",
+    "Earth's magnetic field protects us from harmful solar radiation.",
+    "The Earth is not perfectly round - it's slightly flattened at the poles.",
+    "Earth is the densest planet in the solar system."
+  ],
+  "moon": [
+    "The Moon is slowly moving away from Earth at 3.8 cm per year.",
+    "The Moon has moonquakes caused by Earth's gravitational pull.",
+    "You would weigh 1/6th of your Earth weight on the Moon.",
+    "The Moon has no atmosphere, so there's no weather or wind.",
+    "The same side of the Moon always faces Earth due to tidal locking."
+  ],
+  "mars": [
+    "Mars has the largest volcano in the solar system - Olympus Mons.",
+    "Mars has two small moons: Phobos and Deimos.",
+    "Mars has polar ice caps made of water and carbon dioxide.",
+    "A day on Mars is almost the same length as Earth (24.6 hours).",
+    "Mars has the largest dust storms in the solar system."
+  ],
+  "jupiter": [
+    "Jupiter is so massive it could fit all other planets inside it.",
+    "Jupiter has over 95 known moons, including the four largest.",
+    "Jupiter's Great Red Spot is a storm larger than Earth.",
+    "Jupiter acts as a 'cosmic vacuum cleaner' protecting inner planets.",
+    "Jupiter has a faint ring system discovered by Voyager 1."
+  ],
+  "saturn": [
+    "Saturn is less dense than water - it would float in a giant bathtub!",
+    "Saturn's rings are made of ice, rock, and dust particles.",
+    "Saturn has a hexagonal storm at its north pole.",
+    "Saturn has 146 known moons, including Titan which is larger than Mercury.",
+    "Saturn's rings are only about 20 meters thick but span 280,000 km."
+  ],
+  "uranus": [
+    "Uranus rotates on its side - it's tilted 98 degrees!",
+    "Uranus has faint rings that were discovered in 1977.",
+    "Uranus is the coldest planet in the solar system.",
+    "A year on Uranus equals 84 Earth years.",
+    "Uranus has only been visited by one spacecraft: Voyager 2."
+  ],
+  "neptune": [
+    "Neptune has the fastest winds in the solar system - up to 2,100 km/h!",
+    "Neptune takes 165 Earth years to orbit the Sun once.",
+    "Neptune appears blue due to methane in its atmosphere.",
+    "Neptune has a Great Dark Spot similar to Jupiter's Great Red Spot.",
+    "Neptune was the first planet discovered through mathematical prediction."
+  ]
+};
+
+function getHemisphereFromCameraPosition(camera: THREE.Camera, planetName: string): string {
+  if (!solarSystem[planetName]) return "northern";
+  
+  const planet = solarSystem[planetName];
+  const planetPosition = planet.mesh.position;
+  const cameraPosition = camera.position;
+  
+  // Calculate vector from planet to camera
+  const direction = new THREE.Vector3().subVectors(cameraPosition, planetPosition).normalize();
+  
+  // Use Y component to determine hemisphere (positive Y = northern, negative Y = southern)
+  const hemisphere = direction.y > 0 ? "northern" : "southern";
+  
+  return hemisphere;
+}
+
+// Fun facts system
+let currentFactIndex = 0;
+let factRotationTimer: number | null = null;
+let currentPlanetFacts: string[] = [];
+let lastUsedPosition = -1;
+
+function updateFunFacts(planetName: string) {
+  const facts = planetFunFacts[planetName.toLowerCase()];
+  if (!facts || facts.length === 0) {
+    hideFunFactTooltip();
+    return;
+  }
+  
+  currentPlanetFacts = facts;
+  currentFactIndex = 0;
+  showFunFactTooltip(planetName, facts[0]);
+  
+  // Start rotation timer
+  if (factRotationTimer) {
+    clearInterval(factRotationTimer);
+  }
+  
+  factRotationTimer = setInterval(() => {
+    currentFactIndex = (currentFactIndex + 1) % facts.length;
+    showFunFactTooltip(planetName, facts[currentFactIndex]);
+  }, 4000); // Change fact every 4 seconds
+}
+
+function showFunFactTooltip(planetName: string, fact: string) {
+  let tooltip = document.getElementById('fun-fact-tooltip');
+  if (!tooltip) {
+    tooltip = document.createElement('div');
+    tooltip.id = 'fun-fact-tooltip';
+    tooltip.className = 'fun-fact-tooltip';
+    document.body.appendChild(tooltip);
+  }
+  
+  // Get planet position in 3D space
+  const planet = solarSystem[planetName];
+  if (!planet) return;
+  
+  const planetWorldPosition = new THREE.Vector3();
+  planet.mesh.getWorldPosition(planetWorldPosition);
+  
+  // Project 3D position to 2D screen coordinates
+  const screenPosition = new THREE.Vector3();
+  planetWorldPosition.project(fakeCamera);
+  
+  // Convert to screen coordinates
+  const planetScreenX = (screenPosition.x * 0.5 + 0.5) * window.innerWidth;
+  const planetScreenY = (screenPosition.y * -0.5 + 0.5) * window.innerHeight;
+  
+  // Calculate tooltip position (avoid left side where main tooltip is)
+  let tooltipX, tooltipY;
+  
+  // If planet is on the left side, place tooltip on the right
+  if (planetScreenX < window.innerWidth * 0.5) {
+    tooltipX = window.innerWidth - 320; // Right side
+    tooltipY = Math.max(50, Math.min(window.innerHeight - 100, planetScreenY));
+  } else {
+    // If planet is on the right side, place tooltip on the left (but not too far left)
+    tooltipX = Math.max(420, planetScreenX - 350); // Avoid main tooltip area
+    tooltipY = Math.max(50, Math.min(window.innerHeight - 100, planetScreenY));
+  }
+  
+  // Calculate line angle and length
+  const deltaX = planetScreenX - tooltipX;
+  const deltaY = planetScreenY - tooltipY;
+  const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
+  const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+  
+  tooltip.innerHTML = `
+    <div class="fun-fact-content">
+      <div class="fun-fact-planet">${planetName.toUpperCase()}</div>
+      <div class="fun-fact-text">${fact}</div>
+    </div>
+    <div class="fun-fact-line" style="
+      transform: rotate(${angle}deg);
+      width: ${Math.min(distance, 200)}px;
+      transform-origin: left center;
+    "></div>
+  `;
+  
+  // Apply calculated position
+  tooltip.style.position = 'fixed';
+  tooltip.style.left = `${tooltipX}px`;
+  tooltip.style.top = `${tooltipY}px`;
+  tooltip.style.right = 'auto';
+  tooltip.style.transform = 'translateY(-50%)';
+  
+  tooltip.style.display = 'block';
+  tooltip.style.opacity = '0';
+  tooltip.style.scale = '0.8';
+  
+  // Animate in
+  setTimeout(() => {
+    tooltip.style.transition = 'all 0.4s ease';
+    tooltip.style.opacity = '1';
+    tooltip.style.scale = '1';
+  }, 10);
+}
+
+function hideFunFactTooltip() {
+  if (factRotationTimer) {
+    clearInterval(factRotationTimer);
+    factRotationTimer = null;
+  }
+  
+  const tooltip = document.getElementById('fun-fact-tooltip');
+  if (tooltip) {
+    tooltip.style.transition = 'all 0.3s ease';
+    tooltip.style.opacity = '0';
+    tooltip.style.scale = '0.8';
+    
+    setTimeout(() => {
+      tooltip.style.display = 'none';
+    }, 300);
+  }
+}
+
+// Planetary feature system
+interface PlanetaryFeature {
+  id: string;
+  name: string;
+  description: string;
+  position: THREE.Vector3;
+  icon: string;
+  visible: boolean;
+  mesh?: THREE.Mesh;
+}
+
+const planetaryFeatures: Record<string, PlanetaryFeature[]> = {
+  "mercury": [
+    {
+      id: "mercury-craters",
+      name: "Heavily Cratered Surface",
+      description: "Mercury's surface is heavily cratered, resembling Earth's Moon, due to numerous impacts over billions of years. The largest crater, Caloris Basin, is 1,550 km wide.",
+      position: new THREE.Vector3(0.8, 0.2, 0),
+      icon: "🌑",
+      visible: false
+    }
+  ],
+  "venus": [
+    {
+      id: "venus-volcanoes",
+      name: "Volcanic Activity",
+      description: "Venus has over 1,600 major volcanoes, though most are likely inactive today. The planet's surface is dominated by volcanic plains and shield volcanoes.",
+      position: new THREE.Vector3(0.6, 0.3, 0.4),
+      icon: "🌋",
+      visible: false
+    }
+  ],
+  "earth": [
+    {
+      id: "earth-life",
+      name: "Life-Supporting Planet",
+      description: "Earth is the only known planet to support life, with diverse ecosystems ranging from forests to oceans. Our atmosphere protects us from meteoroids and radiation.",
+      position: new THREE.Vector3(0.5, 0.4, 0.3),
+      icon: "🌍",
+      visible: false
+    },
+    {
+      id: "earth-apollo-11",
+      name: "Apollo 11 Landing Site",
+      description: "On July 20, 1969, Apollo 11 landed on the Moon at Tranquility Base. Neil Armstrong became the first human to walk on the lunar surface, followed by Buzz Aldrin.",
+      position: new THREE.Vector3(0.3, 0.2, 0.6),
+      icon: "🚀",
+      visible: false
+    }
+  ],
+  "mars": [
+    {
+      id: "mars-olympus-mons",
+      name: "Olympus Mons",
+      description: "The largest volcano in the solar system, Olympus Mons is 21.9 km high and 600 km wide. It's nearly three times the height of Mount Everest.",
+      position: new THREE.Vector3(0.7, 0.1, 0.2),
+      icon: "🏔️",
+      visible: false
+    },
+    {
+      id: "mars-dust-storms",
+      name: "Global Dust Storms",
+      description: "Mars experiences the largest dust storms in the solar system, sometimes covering the entire planet and lasting for months.",
+      position: new THREE.Vector3(-0.6, 0.2, 0.5),
+      icon: "🌪️",
+      visible: false
+    }
+  ],
+  "jupiter": [
+    {
+      id: "jupiter-great-red-spot",
+      name: "Great Red Spot",
+      description: "Jupiter's Great Red Spot is a giant storm larger than Earth, raging for at least 300 years. It's actually shrinking and may disappear in the next few decades.",
+      position: new THREE.Vector3(0.8, 0.1, 0),
+      icon: "🌀",
+      visible: false
+    },
+    {
+      id: "jupiter-moons",
+      name: "95+ Moons",
+      description: "Jupiter has over 95 known moons, including the four largest: Io, Europa, Ganymede, and Callisto. Ganymede is larger than Mercury.",
+      position: new THREE.Vector3(0.3, 0.6, 0.4),
+      icon: "🌙",
+      visible: false
+    }
+  ],
+  "saturn": [
+    {
+      id: "saturn-rings",
+      name: "Ring System",
+      description: "Saturn's ring system is the most extensive and complex in the solar system, with some rings spanning up to 200 times the planet's diameter.",
+      position: new THREE.Vector3(0.9, 0, 0),
+      icon: "💍",
+      visible: false
+    },
+    {
+      id: "saturn-hexagon",
+      name: "Polar Hexagon",
+      description: "Saturn has a unique hexagonal storm at its north pole, with each side nearly 7,500 miles across. This geometric storm has persisted for decades.",
+      position: new THREE.Vector3(0, 0.8, 0),
+      icon: "⬡",
+      visible: false
+    }
+  ],
+  "uranus": [
+    {
+      id: "uranus-tilt",
+      name: "Sideways Rotation",
+      description: "Uranus rotates on its side with an axial tilt of about 98 degrees, making its rotation unique among the planets. This may be due to an ancient collision.",
+      position: new THREE.Vector3(0.4, 0.7, 0.3),
+      icon: "🔄",
+      visible: false
+    }
+  ],
+  "neptune": [
+    {
+      id: "neptune-winds",
+      name: "Fastest Winds",
+      description: "Neptune has the fastest winds in the solar system, reaching speeds over 1,100 miles per hour. These supersonic winds create massive storms.",
+      position: new THREE.Vector3(0.6, 0.2, 0.5),
+      icon: "💨",
+      visible: false
+    }
+  ],
+  "moon": [
+    {
+      id: "moon-apollo-11",
+      name: "Apollo 11 Landing Site",
+      description: "On July 20, 1969, Apollo 11 landed at Tranquility Base. Neil Armstrong became the first human to walk on the lunar surface, followed by Buzz Aldrin. The landing site is marked by the American flag and scientific equipment.",
+      position: new THREE.Vector3(0.4, 0.3, 0.5),
+      icon: "🚀",
+      visible: false
+    },
+    {
+      id: "moon-tycho-crater",
+      name: "Tycho Crater",
+      description: "Tycho is one of the most prominent craters on the Moon, with a diameter of 85 km. It's famous for its bright ray system that extends across much of the lunar surface.",
+      position: new THREE.Vector3(-0.6, 0.2, 0.3),
+      icon: "🌑",
+      visible: false
+    }
+  ]
+};
+
+function createFeatureIcon(feature: PlanetaryFeature, planet: any): THREE.Mesh {
+  const geometry = new THREE.PlaneGeometry(0.1, 0.1);
+  const material = new THREE.MeshBasicMaterial({
+    color: 0x88ccff,
+    transparent: true,
+    opacity: 0.8,
+    side: THREE.DoubleSide
+  });
+  
+  const iconMesh = new THREE.Mesh(geometry, material);
+  iconMesh.position.copy(feature.position);
+  iconMesh.userData = { featureId: feature.id, planetName: planet.name };
+  
+  // Add text sprite for icon
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+  if (context) {
+    canvas.width = 64;
+    canvas.height = 64;
+    context.font = '48px Arial';
+    context.fillStyle = '#88ccff';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillText(feature.icon, 32, 32);
+    
+    const texture = new THREE.CanvasTexture(canvas);
+    const iconMaterial = new THREE.MeshBasicMaterial({
+      map: texture,
+      transparent: true,
+      opacity: 0.9
+    });
+    iconMesh.material = iconMaterial;
+  }
+  
+  return iconMesh;
+}
+
+function initializePlanetaryFeatures() {
+  Object.keys(planetaryFeatures).forEach(planetName => {
+    const planet = solarSystem[planetName];
+    if (planet) {
+      planetaryFeatures[planetName].forEach(feature => {
+        const iconMesh = createFeatureIcon(feature, planet);
+        planet.mesh.add(iconMesh);
+        feature.mesh = iconMesh;
+        iconMesh.visible = false; // Initially hidden
+      });
+    }
+  });
+}
+
+function checkFeatureVisibility() {
+  Object.keys(planetaryFeatures).forEach(planetName => {
+    const planet = solarSystem[planetName];
+    if (planet && planetName === options.focus) {
+      planetaryFeatures[planetName].forEach(feature => {
+        if (feature.mesh) {
+          // Calculate if feature is facing the camera
+          const featureWorldPosition = new THREE.Vector3();
+          feature.mesh.getWorldPosition(featureWorldPosition);
+          
+          const cameraDirection = new THREE.Vector3();
+          fakeCamera.getWorldDirection(cameraDirection);
+          
+          const featureDirection = new THREE.Vector3()
+            .subVectors(featureWorldPosition, fakeCamera.position)
+            .normalize();
+          
+          const dotProduct = cameraDirection.dot(featureDirection);
+          const shouldBeVisible = dotProduct > 0.3; // Feature is visible if facing camera
+          
+          if (shouldBeVisible && !feature.visible) {
+            feature.visible = true;
+            feature.mesh.visible = true;
+            showFeatureTooltip(feature);
+          } else if (!shouldBeVisible && feature.visible) {
+            feature.visible = false;
+            feature.mesh.visible = false;
+            hideFeatureTooltip(feature);
+          }
+        }
+      });
+    }
+  });
+}
+
+function showFeatureTooltip(feature: PlanetaryFeature) {
+  // Create or update feature tooltip
+  let tooltip = document.getElementById(`feature-${feature.id}`);
+  if (!tooltip) {
+    tooltip = document.createElement('div');
+    tooltip.id = `feature-${feature.id}`;
+    tooltip.className = 'feature-tooltip';
+    tooltip.innerHTML = `
+      <div class="feature-tooltip-content">
+        <div class="feature-tooltip-icon">${feature.icon}</div>
+        <div class="feature-tooltip-title">${feature.name}</div>
+        <div class="feature-tooltip-description">${feature.description}</div>
+      </div>
+    `;
+    document.body.appendChild(tooltip);
+  }
+  
+  tooltip.style.display = 'block';
+  tooltip.style.opacity = '0';
+  tooltip.style.transform = 'translateX(20px)';
+  
+  // Animate in
+  setTimeout(() => {
+    tooltip.style.transition = 'all 0.3s ease';
+    tooltip.style.opacity = '1';
+    tooltip.style.transform = 'translateX(0)';
+  }, 10);
+}
+
+function updateFeatureTooltipPosition(feature: PlanetaryFeature, tooltip: HTMLElement) {
+  // Position tooltip on the right side of the screen
+  tooltip.style.position = 'fixed';
+  tooltip.style.right = '20px';
+  tooltip.style.top = '50%';
+  tooltip.style.transform = 'translateY(-50%)';
+  tooltip.style.left = 'auto';
+}
+
+function hideFeatureTooltip(feature: PlanetaryFeature) {
+  const tooltip = document.getElementById(`feature-${feature.id}`);
+  if (tooltip) {
+    tooltip.style.transition = 'all 0.3s ease';
+    tooltip.style.opacity = '0';
+    tooltip.style.transform = 'translateY(10px)';
+    
+    setTimeout(() => {
+      tooltip.style.display = 'none';
+    }, 300);
+  }
+}
+
 const changeFocus = (oldFocus: string, newFocus: string) => {
   solarSystem[oldFocus].mesh.remove(camera);
   solarSystem[newFocus].mesh.add(camera);
@@ -91,6 +591,9 @@ const changeFocus = (oldFocus: string, newFocus: string) => {
         currentTooltip.classList.add('show');
       }, 50);
     }
+    
+  // Start fun facts for the new planet (including Sun)
+  updateFunFacts(newFocus);
   }, 100);
 };
 
@@ -128,6 +631,9 @@ const aspect = sizes.width / sizes.height;
 const camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 1000);
 camera.position.set(0, 20, 0);
 solarSystem["Sun"].mesh.add(camera);
+
+// Initialize planetary features
+initializePlanetaryFeatures();
 
 // Controls
 const fakeCamera = camera.clone();
@@ -181,6 +687,17 @@ document.getElementById("btn-hand-debug")?.addEventListener("click", () => {
     const isVisible = document.getElementById("hand-debug-canvas")?.style.display !== "none";
     button.style.backgroundColor = isVisible ? "#2196F3" : "";
     button.title = isVisible ? "Hide Hand Debug View" : "Show Hand Debug View";
+    
+    // Toggle hand UI elements visibility
+    const handStatus = document.getElementById("hand-status");
+    const handHelp = document.getElementById("hand-help");
+    
+    if (handStatus) {
+      handStatus.style.display = isVisible ? "none" : "block";
+    }
+    if (handHelp) {
+      handHelp.style.display = isVisible ? "none" : "block";
+    }
   }
 });
 
@@ -495,6 +1012,11 @@ eventBus.emit("focusChanged", {
   // Update labels
   const currentBody = solarSystem[options.focus];
   currentBody.labels.update(fakeCamera);
+
+  // Fun facts are handled by the rotation timer, no need to check here
+
+  // Check feature visibility
+  checkFeatureVisibility();
 
   // Render
   bloomComposer.render();
