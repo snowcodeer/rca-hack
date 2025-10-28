@@ -113,23 +113,52 @@
         </svg>
       </button>
     </div>
-    <div class="caption" style="display: none;">
-      <button id="btn-previous">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20">
-          <path
-            d="M10 20A10 10 0 1 0 0 10a10 10 0 0 0 10 10zm1.289-15.7 1.422 1.4-4.3 4.344 4.289 4.245-1.4 1.422-5.714-5.648z"
-          />
-        </svg>
-      </button>
-      <p>Sun</p>
-      <button id="btn-next">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20">
-          <path
-            d="M10 20A10 10 0 1 0 0 10a10 10 0 0 0 10 10zM8.711 4.3l5.7 5.766L8.7 15.711l-1.4-1.422 4.289-4.242-4.3-4.347z"
-          />
-        </svg>
-      </button>
-    </div>
+        <div class="caption" style="display: none;">
+          <button id="btn-previous">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20">
+              <path
+                d="M10 20A10 10 0 1 0 0 10a10 10 0 0 0 10 10zm1.289-15.7 1.422 1.4-4.3 4.344 4.289 4.245-1.4 1.422-5.714-5.648z"
+              />
+            </svg>
+          </button>
+          <p>Sun</p>
+          <button id="btn-next">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20">
+              <path
+                d="M10 20A10 10 0 1 0 0 10a10 10 0 0 0 10 10zM8.711 4.3l5.7 5.766L8.7 15.711l-1.4-1.422 4.289-4.242-4.3-4.347z"
+              />
+            </svg>
+          </button>
+        </div>
+        
+        <!-- Geometric Futuristic Tooltip -->
+        <div id="space-tooltip" class="space-tooltip" style="display: none;">
+          <div class="tooltip-frame">
+            <div class="tooltip-header">
+              <div class="tooltip-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="5"/>
+                  <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"/>
+                </svg>
+              </div>
+              <div class="tooltip-title">Sun (Sol)</div>
+            </div>
+            <div class="tooltip-content">
+              <div class="tooltip-row">
+                <div class="tooltip-label">Surface Temperature</div>
+                <div class="tooltip-value">~5,500 °C (9,932 °F)</div>
+              </div>
+              <div class="tooltip-row">
+                <div class="tooltip-label">Main Elements</div>
+                <div class="tooltip-value">~74% hydrogen, ~24% helium</div>
+              </div>
+              <div class="tooltip-row">
+                <div class="tooltip-label">Rotation Period</div>
+                <div class="tooltip-value">~25 days at the equator</div>
+              </div>
+            </div>
+          </div>
+        </div>
     
     <script type="module" src="./main.tsx"></script>
   </body>
