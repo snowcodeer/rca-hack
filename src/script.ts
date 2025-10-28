@@ -65,78 +65,128 @@ interface HemisphereData {
   }>;
 }
 
-// Fun facts system for all planets
-const planetFunFacts: Record<string, string[]> = {
-  "sun": [
-    "The Sun contains 99.86% of the solar system's mass!",
-    "Every second, the Sun converts 4 million tons of matter into energy.",
-    "The Sun's core temperature is 15 million°C (27 million°F).",
-    "Light from the Sun takes 8 minutes and 20 seconds to reach Earth.",
-    "The Sun is actually white, not yellow - it appears yellow due to Earth's atmosphere."
-  ],
-  "mercury": [
-    "Mercury has no atmosphere, so it can't trap heat from the Sun.",
-    "A day on Mercury lasts 176 Earth days - longer than its year!",
-    "Mercury is shrinking! The planet is getting smaller due to cooling.",
-    "Despite being closest to the Sun, Mercury isn't the hottest planet.",
-    "Mercury has the most extreme temperature variations in the solar system."
-  ],
-  "venus": [
-    "Venus rotates backwards compared to most planets!",
-    "A day on Venus is longer than its year (243 vs 225 Earth days).",
-    "Venus is the hottest planet at 462°C (864°F) - hotter than Mercury!",
-    "Venus has acid rain made of sulfuric acid.",
-    "The pressure on Venus is 92 times greater than Earth's surface."
-  ],
-  "earth": [
-    "Earth is the only known planet with life in the universe.",
-    "71% of Earth's surface is covered by water.",
-    "Earth's magnetic field protects us from harmful solar radiation.",
-    "The Earth is not perfectly round - it's slightly flattened at the poles.",
-    "Earth is the densest planet in the solar system."
-  ],
-  "moon": [
-    "The Moon is slowly moving away from Earth at 3.8 cm per year.",
-    "The Moon has moonquakes caused by Earth's gravitational pull.",
-    "You would weigh 1/6th of your Earth weight on the Moon.",
-    "The Moon has no atmosphere, so there's no weather or wind.",
-    "The same side of the Moon always faces Earth due to tidal locking."
-  ],
-  "mars": [
-    "Mars has the largest volcano in the solar system - Olympus Mons.",
-    "Mars has two small moons: Phobos and Deimos.",
-    "Mars has polar ice caps made of water and carbon dioxide.",
-    "A day on Mars is almost the same length as Earth (24.6 hours).",
-    "Mars has the largest dust storms in the solar system."
-  ],
-  "jupiter": [
-    "Jupiter is so massive it could fit all other planets inside it.",
-    "Jupiter has over 95 known moons, including the four largest.",
-    "Jupiter's Great Red Spot is a storm larger than Earth.",
-    "Jupiter acts as a 'cosmic vacuum cleaner' protecting inner planets.",
-    "Jupiter has a faint ring system discovered by Voyager 1."
-  ],
-  "saturn": [
-    "Saturn is less dense than water - it would float in a giant bathtub!",
-    "Saturn's rings are made of ice, rock, and dust particles.",
-    "Saturn has a hexagonal storm at its north pole.",
-    "Saturn has 146 known moons, including Titan which is larger than Mercury.",
-    "Saturn's rings are only about 20 meters thick but span 280,000 km."
-  ],
-  "uranus": [
-    "Uranus rotates on its side - it's tilted 98 degrees!",
-    "Uranus has faint rings that were discovered in 1977.",
-    "Uranus is the coldest planet in the solar system.",
-    "A year on Uranus equals 84 Earth years.",
-    "Uranus has only been visited by one spacecraft: Voyager 2."
-  ],
-  "neptune": [
-    "Neptune has the fastest winds in the solar system - up to 2,100 km/h!",
-    "Neptune takes 165 Earth years to orbit the Sun once.",
-    "Neptune appears blue due to methane in its atmosphere.",
-    "Neptune has a Great Dark Spot similar to Jupiter's Great Red Spot.",
-    "Neptune was the first planet discovered through mathematical prediction."
-  ]
+// Fun facts system for all planets (different facts for each hemisphere view)
+const planetFunFacts: Record<string, Record<string, string[]>> = {
+  "sun": {
+    "northern": [
+      "The Sun contains 99.86% of the solar system's mass!",
+      "Every second, the Sun converts 4 million tons of matter into energy.",
+      "The Sun's core temperature is 15 million°C (27 million°F)."
+    ],
+    "southern": [
+      "Light from the Sun takes 8 minutes and 20 seconds to reach Earth.",
+      "The Sun is actually white, not yellow - it appears yellow due to Earth's atmosphere.",
+      "The Sun has been shining for about 4.6 billion years."
+    ]
+  },
+  "mercury": {
+    "northern": [
+      "Mercury has no atmosphere, so it can't trap heat from the Sun.",
+      "A day on Mercury lasts 176 Earth days - longer than its year!",
+      "Mercury is shrinking! The planet is getting smaller due to cooling."
+    ],
+    "southern": [
+      "Despite being closest to the Sun, Mercury isn't the hottest planet.",
+      "Mercury has the most extreme temperature variations in the solar system.",
+      "Mercury has a large iron core that makes up about 75% of its radius."
+    ]
+  },
+  "venus": {
+    "northern": [
+      "Venus rotates backwards compared to most planets!",
+      "A day on Venus is longer than its year (243 vs 225 Earth days).",
+      "Venus is the hottest planet at 462°C (864°F) - hotter than Mercury!"
+    ],
+    "southern": [
+      "Venus has acid rain made of sulfuric acid.",
+      "The pressure on Venus is 92 times greater than Earth's surface.",
+      "Venus is often called Earth's twin due to similar size and composition."
+    ]
+  },
+  "earth": {
+    "northern": [
+      "Earth is the only known planet with life in the universe.",
+      "71% of Earth's surface is covered by water.",
+      "Earth's magnetic field protects us from harmful solar radiation."
+    ],
+    "southern": [
+      "The Earth is not perfectly round - it's slightly flattened at the poles.",
+      "Earth is the densest planet in the solar system.",
+      "Earth has the strongest magnetic field of all the terrestrial planets."
+    ]
+  },
+  "moon": {
+    "northern": [
+      "The Moon is slowly moving away from Earth at 3.8 cm per year.",
+      "The Moon has moonquakes caused by Earth's gravitational pull.",
+      "You would weigh 1/6th of your Earth weight on the Moon."
+    ],
+    "southern": [
+      "The Moon has no atmosphere, so there's no weather or wind.",
+      "The same side of the Moon always faces Earth due to tidal locking.",
+      "The Moon was likely formed from debris after a Mars-sized object hit Earth."
+    ]
+  },
+  "mars": {
+    "northern": [
+      "Mars has the largest volcano in the solar system - Olympus Mons.",
+      "Mars has two small moons: Phobos and Deimos.",
+      "Mars has polar ice caps made of water and carbon dioxide."
+    ],
+    "southern": [
+      "A day on Mars is almost the same length as Earth (24.6 hours).",
+      "Mars has the largest dust storms in the solar system.",
+      "Mars has evidence of ancient river valleys and lake beds."
+    ]
+  },
+  "jupiter": {
+    "northern": [
+      "Jupiter is so massive it could fit all other planets inside it.",
+      "Jupiter has over 95 known moons, including the four largest.",
+      "Jupiter's Great Red Spot is a storm larger than Earth."
+    ],
+    "southern": [
+      "Jupiter acts as a 'cosmic vacuum cleaner' protecting inner planets.",
+      "Jupiter has a faint ring system discovered by Voyager 1.",
+      "Jupiter's moon Europa may have a subsurface ocean."
+    ]
+  },
+  "saturn": {
+    "northern": [
+      "Saturn is less dense than water - it would float in a giant bathtub!",
+      "Saturn's rings are made of ice, rock, and dust particles.",
+      "Saturn has a hexagonal storm at its north pole."
+    ],
+    "southern": [
+      "Saturn has 146 known moons, including Titan which is larger than Mercury.",
+      "Saturn's rings are only about 20 meters thick but span 280,000 km.",
+      "Saturn's moon Titan has lakes and rivers of liquid methane."
+    ]
+  },
+  "uranus": {
+    "northern": [
+      "Uranus rotates on its side - it's tilted 98 degrees!",
+      "Uranus has faint rings that were discovered in 1977.",
+      "Uranus is the coldest planet in the solar system."
+    ],
+    "southern": [
+      "A year on Uranus equals 84 Earth years.",
+      "Uranus has only been visited by one spacecraft: Voyager 2.",
+      "Uranus has 27 known moons, all named after Shakespeare characters."
+    ]
+  },
+  "neptune": {
+    "northern": [
+      "Neptune has the fastest winds in the solar system - up to 2,100 km/h!",
+      "Neptune takes 165 Earth years to orbit the Sun once.",
+      "Neptune appears blue due to methane in its atmosphere."
+    ],
+    "southern": [
+      "Neptune has a Great Dark Spot similar to Jupiter's Great Red Spot.",
+      "Neptune was the first planet discovered through mathematical prediction.",
+      "Neptune's moon Triton orbits backwards and is slowly spiraling inward."
+    ]
+  }
 };
 
 function getHemisphereFromCameraPosition(camera: THREE.Camera, planetName: string): string {
@@ -155,39 +205,61 @@ function getHemisphereFromCameraPosition(camera: THREE.Camera, planetName: strin
   return hemisphere;
 }
 
-// Fun facts system
-let currentFactIndex = 0;
-let factRotationTimer: number | null = null;
-let currentPlanetFacts: string[] = [];
-let lastUsedPosition = -1;
+// Hemisphere-based fun facts system - two tooltips per planet
+let currentPlanet = "";
+let currentHemisphere = "";
+let northernTooltipVisible = false;
+let southernTooltipVisible = false;
 
 function updateFunFacts(planetName: string) {
-  const facts = planetFunFacts[planetName.toLowerCase()];
-  if (!facts || facts.length === 0) {
-    hideFunFactTooltip();
+  // Hide all existing tooltips when switching planets
+  if (currentPlanet !== planetName) {
+    hideAllFunFactTooltips();
+    currentPlanet = planetName;
+    northernTooltipVisible = false;
+    southernTooltipVisible = false;
+    
+    // Add a small delay to ensure smooth transition
+    setTimeout(() => {
+      showTooltipForCurrentHemisphere(planetName);
+    }, 100);
     return;
   }
   
-  currentPlanetFacts = facts;
-  currentFactIndex = 0;
-  showFunFactTooltip(planetName, facts[0]);
-  
-  // Start rotation timer
-  if (factRotationTimer) {
-    clearInterval(factRotationTimer);
-  }
-  
-  factRotationTimer = setInterval(() => {
-    currentFactIndex = (currentFactIndex + 1) % facts.length;
-    showFunFactTooltip(planetName, facts[currentFactIndex]);
-  }, 4000); // Change fact every 4 seconds
+  showTooltipForCurrentHemisphere(planetName);
 }
 
-function showFunFactTooltip(planetName: string, fact: string) {
-  let tooltip = document.getElementById('fun-fact-tooltip');
+function showTooltipForCurrentHemisphere(planetName: string) {
+  const hemisphere = getHemisphereFromCameraPosition(fakeCamera, planetName);
+  const hemisphereFacts = planetFunFacts[planetName.toLowerCase()];
+  
+  if (!hemisphereFacts) {
+    hideAllFunFactTooltips();
+    return;
+  }
+  
+  // Show/hide tooltips based on hemisphere
+  if (hemisphere === "northern" && !northernTooltipVisible) {
+    // Show northern tooltip, hide southern
+    hideFunFactTooltip("southern");
+    showFunFactTooltip(planetName, hemisphereFacts.northern[0], "northern");
+    northernTooltipVisible = true;
+    southernTooltipVisible = false;
+  } else if (hemisphere === "southern" && !southernTooltipVisible) {
+    // Show southern tooltip, hide northern
+    hideFunFactTooltip("northern");
+    showFunFactTooltip(planetName, hemisphereFacts.southern[0], "southern");
+    southernTooltipVisible = true;
+    northernTooltipVisible = false;
+  }
+}
+
+function showFunFactTooltip(planetName: string, fact: string, hemisphere: string) {
+  const tooltipId = `fun-fact-tooltip-${hemisphere}`;
+  let tooltip = document.getElementById(tooltipId);
   if (!tooltip) {
     tooltip = document.createElement('div');
-    tooltip.id = 'fun-fact-tooltip';
+    tooltip.id = tooltipId;
     tooltip.className = 'fun-fact-tooltip';
     document.body.appendChild(tooltip);
   }
@@ -203,29 +275,45 @@ function showFunFactTooltip(planetName: string, fact: string) {
   const screenPosition = new THREE.Vector3();
   planetWorldPosition.project(fakeCamera);
   
-  // Convert to screen coordinates
+  // Convert to screen coordinates - this is the planet center
   const planetScreenX = (screenPosition.x * 0.5 + 0.5) * window.innerWidth;
   const planetScreenY = (screenPosition.y * -0.5 + 0.5) * window.innerHeight;
   
-  // Calculate tooltip position (avoid left side where main tooltip is)
-  let tooltipX, tooltipY;
+  // Random positions that avoid the main tooltip area (left side)
+  const safePositions = [
+    // Top right area
+    { x: window.innerWidth - 350, y: 100 },
+    { x: window.innerWidth - 300, y: 150 },
+    { x: window.innerWidth - 250, y: 200 },
+    
+    // Middle right area
+    { x: window.innerWidth - 350, y: window.innerHeight * 0.3 },
+    { x: window.innerWidth - 300, y: window.innerHeight * 0.4 },
+    { x: window.innerWidth - 250, y: window.innerHeight * 0.5 },
+    
+    // Bottom right area
+    { x: window.innerWidth - 350, y: window.innerHeight - 200 },
+    { x: window.innerWidth - 300, y: window.innerHeight - 150 },
+    { x: window.innerWidth - 250, y: window.innerHeight - 100 },
+    
+    // Center area (avoiding left side)
+    { x: window.innerWidth * 0.6, y: 100 },
+    { x: window.innerWidth * 0.7, y: window.innerHeight * 0.3 },
+    { x: window.innerWidth * 0.65, y: window.innerHeight * 0.6 },
+    { x: window.innerWidth * 0.75, y: window.innerHeight - 150 }
+  ];
   
-  // If planet is on the left side, place tooltip on the right
-  if (planetScreenX < window.innerWidth * 0.5) {
-    tooltipX = window.innerWidth - 320; // Right side
-    tooltipY = Math.max(50, Math.min(window.innerHeight - 100, planetScreenY));
-  } else {
-    // If planet is on the right side, place tooltip on the left (but not too far left)
-    tooltipX = Math.max(420, planetScreenX - 350); // Avoid main tooltip area
-    tooltipY = Math.max(50, Math.min(window.innerHeight - 100, planetScreenY));
-  }
+  // Pick a random safe position
+  const randomPosition = safePositions[Math.floor(Math.random() * safePositions.length)];
+  const tooltipX = randomPosition.x;
+  const tooltipY = randomPosition.y;
   
-  // Calculate line angle and length
+  // Calculate line angle and length from tooltip left edge to planet center
   const deltaX = planetScreenX - tooltipX;
   const deltaY = planetScreenY - tooltipY;
   const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
   const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-  
+
   tooltip.innerHTML = `
     <div class="fun-fact-content">
       <div class="fun-fact-planet">${planetName.toUpperCase()}</div>
@@ -233,7 +321,7 @@ function showFunFactTooltip(planetName: string, fact: string) {
     </div>
     <div class="fun-fact-line" style="
       transform: rotate(${angle}deg);
-      width: ${Math.min(distance, 200)}px;
+      width: ${Math.min(distance, 300)}px;
       transform-origin: left center;
     "></div>
   `;
@@ -257,13 +345,8 @@ function showFunFactTooltip(planetName: string, fact: string) {
   }, 10);
 }
 
-function hideFunFactTooltip() {
-  if (factRotationTimer) {
-    clearInterval(factRotationTimer);
-    factRotationTimer = null;
-  }
-  
-  const tooltip = document.getElementById('fun-fact-tooltip');
+function hideFunFactTooltip(hemisphere: string) {
+  const tooltip = document.getElementById(`fun-fact-tooltip-${hemisphere}`);
   if (tooltip) {
     tooltip.style.transition = 'all 0.3s ease';
     tooltip.style.opacity = '0';
@@ -273,6 +356,13 @@ function hideFunFactTooltip() {
       tooltip.style.display = 'none';
     }, 300);
   }
+}
+
+function hideAllFunFactTooltips() {
+  hideFunFactTooltip("northern");
+  hideFunFactTooltip("southern");
+  northernTooltipVisible = false;
+  southernTooltipVisible = false;
 }
 
 // Planetary feature system
@@ -1013,7 +1103,10 @@ eventBus.emit("focusChanged", {
   const currentBody = solarSystem[options.focus];
   currentBody.labels.update(fakeCamera);
 
-  // Fun facts are handled by the rotation timer, no need to check here
+  // Update fun facts based on current hemisphere (only if planet hasn't changed)
+  if (currentPlanet === options.focus) {
+    showTooltipForCurrentHemisphere(options.focus);
+  }
 
   // Check feature visibility
   checkFeatureVisibility();
