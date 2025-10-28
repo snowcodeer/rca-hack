@@ -51,6 +51,12 @@ export type VoiceIntentEvent =
       type: "stop";
       transcript: string;
       normalized: string;
+    }
+  | {
+      type: "narrate";
+      target: string;
+      transcript: string;
+      normalized: string;
     };
 
 type EventListener<E extends keyof VoiceCoreEvents> = (

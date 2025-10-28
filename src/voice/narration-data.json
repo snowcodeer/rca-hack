@@ -1,0 +1,52 @@
+[
+  {
+    "name": "Sun",
+    "voiceId": "RR2ynyOv72JmDyAdmblA",
+    "text": "Welcome to the Sun—our 4.6-billion-year-old fusion furnace. Its core turns hydrogen into helium, flooding space with light, heat, and solar wind. Sunspots and flares surge on an eleven-year cycle, sending charged storms that paint Earth's auroras. Every planet dances inside this star's gravity well."
+  },
+  {
+    "name": "Mercury",
+    "voiceId": "yPUfD9LmE4cGA4BXENkq",
+    "text": "Mercury is the closest planet to the Sun and has no substantial atmosphere, so temperatures swing from extreme heat to deep cold. It sits in a 3:2 spin–orbit resonance where a solar day lasts about 176 Earth days while its year is only 88 days. A large iron core powers a weak global magnetic field, and the heavily cratered surface shows lobate scarps from global contraction. Water ice survives in permanently shadowed polar craters."
+  },
+  {
+    "name": "Venus",
+    "voiceId": "Bsfdre5jDBDO2FL8lSwO",
+    "text": "Venus is Earth-sized but wrapped in a dense carbon-dioxide atmosphere with surface pressures about 92 times Earth’s and temperatures near 465 degrees Celsius beneath sulfuric-acid clouds. It rotates retrograde and extremely slowly; a Venus day of 243 Earth days actually exceeds its 225-day year. Radar mapping reveals vast volcanic plains, tessera highlands, and evidence for recent or ongoing volcanism even though Venus lacks Earth-style plate tectonics."
+  },
+  {
+    "name": "Earth",
+    "voiceId": "cZcGQKkdzK0IyILxHUyg",
+    "text": "Earth is the only known world with persistent surface liquid water, a nitrogen–oxygen atmosphere, and active plate tectonics that recycle crust and regulate climate. A global magnetic field and moderate greenhouse effect keep conditions stable for life, while oxygen in the air is produced by photosynthesis. The Moon helps stabilize Earth’s axial tilt and tides. Earth rotates every 24 hours and orbits the Sun in about 365 days within the habitable zone."
+  },
+  {
+    "name": "Moon",
+    "voiceId": "OIjELUVIOZLDGBHDVu9j",
+    "text": "Earth’s Moon is tidally locked, so one face always looks homeward. Impact basins and dark maria trace a violent past, and powdery regolith clings to everything. With weak gravity, footprints linger for ages. The Moon’s pull drives tides, steadies Earth’s seasons, and lines up the perfect eclipses that wow skywatchers."
+  },
+  {
+    "name": "Mars",
+    "voiceId": "y9Gomrn3AW2kfJ1JKwP3",
+    "text": "Mars has a thin carbon-dioxide atmosphere, cold temperatures, and widespread iron-oxide dust. Olympus Mons is the solar system’s largest volcano, and Valles Marineris is a canyon system that spans continents. Ancient river valleys, deltas, and water-altered minerals indicate long-lived surface water in the past, while today most water is locked as polar or subsurface ice. Seasonal global dust storms and the small moons Phobos and Deimos add to its drama."
+  },
+  {
+    "name": "Jupiter",
+    "voiceId": "a1zCHhCNEKHweVfu6rVM",
+    "text": "Jupiter is the largest planet, more than twice as massive as all the others combined. Its ten-hour rotation fuels powerful jet streams and long-lived storms like the Great Red Spot, giving the planet an oblate shape. Deep pressures create liquid metallic hydrogen that drives an intense magnetic field and dazzling auroras. The Galilean moons Io, Europa, Ganymede, and Callisto form a diverse miniature system, and Jupiter also sports faint rings."
+  },
+  {
+    "name": "Saturn",
+    "voiceId": "21m00Tcm4TlvDq8ikWAM",
+    "text": "Saturn is a gas giant famous for bright rings made of countless icy and rocky fragments. It rotates rapidly, displays banded clouds, and sustains a persistent hexagonal jet stream at the north pole. Titan hosts a thick atmosphere with methane rivers, lakes, and rain, while Enceladus vents water-rich plumes from a subsurface ocean rich in organics. Saturn’s average density is so low it would float in water."
+  },
+  {
+    "name": "Uranus",
+    "voiceId": "AZnzlk1XvdvUeBnXmlld",
+    "text": "Uranus is an ice giant whose blue-green color comes from methane absorbing red light. Tilted about 98 degrees, it effectively rotates on its side, producing decades-long seasons and a highly tilted, offset magnetic field. Uranus emits little internal heat compared with its peers and has thin, dark rings. Its small icy moons and occasional bright storms offer a nearby laboratory for ice-giant physics."
+  },
+  {
+    "name": "Neptune",
+    "voiceId": "ErXwobaYiN019PkySvjV",
+    "text": "Neptune is a distant ice giant colored deep blue by methane and known for the fastest winds in the solar system, exceeding one thousand miles per hour. Strong internal heat drives dynamic weather, including transient dark storms and high clouds above an icy, volatile-rich interior. Faint rings encircle the planet, and Triton orbits retrograde with nitrogen geysers that hint at internal activity. Neptune was discovered in 1846 thanks to mathematical predictions."
+  }
+]
