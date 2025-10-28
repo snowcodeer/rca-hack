@@ -16,6 +16,9 @@ type VoiceCoreEvents = {
   voiceToggle: {
     enabled: boolean;
   };
+  voiceListenToggle: {
+    // Toggle current listening state (start/stop recording)
+  };
   narrationToggle: {
     enabled: boolean;
   };
