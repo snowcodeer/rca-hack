@@ -65,6 +65,33 @@ const changeFocus = (oldFocus: string, newFocus: string) => {
   solarSystem[oldFocus].labels.hidePOI();
   solarSystem[newFocus].labels.showPOI();
   (document.querySelector(".caption p") as HTMLElement).innerHTML = newFocus;
+  
+  // Hide all tooltips first
+  const allTooltips = [
+    'space-tooltip', 'mercury-tooltip', 'venus-tooltip', 'earth-tooltip', 'moon-tooltip',
+    'mars-tooltip', 'jupiter-tooltip', 'saturn-tooltip', 'uranus-tooltip', 'neptune-tooltip',
+    'ganymede-tooltip', 'titan-tooltip', 'callisto-tooltip', 'io-tooltip', 'europa-tooltip', 'triton-tooltip'
+  ];
+  
+  allTooltips.forEach(tooltipId => {
+    const tooltip = document.getElementById(tooltipId);
+    if (tooltip) {
+      tooltip.classList.remove('show');
+      tooltip.style.display = 'none';
+    }
+  });
+  
+  // Show appropriate tooltip for current focus after a brief delay
+  setTimeout(() => {
+    const tooltipId = `${newFocus.toLowerCase()}-tooltip`;
+    const currentTooltip = document.getElementById(tooltipId);
+    if (currentTooltip) {
+      currentTooltip.style.display = 'block';
+      setTimeout(() => {
+        currentTooltip.classList.add('show');
+      }, 50);
+    }
+  }, 100);
 };
 
 const setFocus = (focus: string) => {
@@ -101,6 +128,17 @@ const aspect = sizes.width / sizes.height;
 const camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 1000);
 camera.position.set(0, 20, 0);
 solarSystem["Sun"].mesh.add(camera);
+
+// Show tooltip for Sun on initial load
+setTimeout(() => {
+  const sunTooltip = document.getElementById('space-tooltip');
+  if (sunTooltip && options.focus === 'Sun') {
+    sunTooltip.style.display = 'block';
+    setTimeout(() => {
+      sunTooltip.classList.add('show');
+    }, 100);
+  }
+}, 1000); // Wait for solar system to fully load
 
 // Controls
 const fakeCamera = camera.clone();

@@ -5,18 +5,32 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
     "stt-proxy": "node server/stt-proxy.js",
     "generate:tts": "node server/generate-welcome-tts.js"
   },
   "devDependencies": {
     "@types/three": "^0.154.0",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
     "sass": "^1.64.1",
+    "tailwindcss": "^4.1.16",
     "vite": "^4.5.5"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "^0.10.22-rc.20250304",
+    "@tailwindcss/postcss": "^4.1.16",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "@vitejs/plugin-react": "^5.1.0",
+    "clsx": "^2.1.1",
     "lil-gui": "^0.18.1",
-    "three": "^0.153.0"
+    "lucide-react": "^0.548.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "tailwind-merge": "^3.3.1",
+    "three": "^0.153.0",
+    "typescript": "^5.9.3"
   }
 }
