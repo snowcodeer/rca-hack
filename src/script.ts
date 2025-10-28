@@ -75,21 +75,32 @@ const changeFocus = (oldFocus: string, newFocus: string) => {
   solarSystem[newFocus].labels.showPOI();
   (document.querySelector(".caption p") as HTMLElement).innerHTML = newFocus;
   
-  // Show/hide space tooltip based on current focus
-  const spaceTooltip = document.getElementById('space-tooltip');
-  if (spaceTooltip) {
-    if (newFocus === 'Sun') {
-      spaceTooltip.style.display = 'block';
-      setTimeout(() => {
-        spaceTooltip.classList.add('show');
-      }, 100);
-    } else {
-      spaceTooltip.classList.remove('show');
-      setTimeout(() => {
-        spaceTooltip.style.display = 'none';
-      }, 500); // Wait for fade out animation
+  // Hide all tooltips first
+  const allTooltips = [
+    'space-tooltip', 'mercury-tooltip', 'venus-tooltip', 'earth-tooltip', 'moon-tooltip',
+    'mars-tooltip', 'jupiter-tooltip', 'saturn-tooltip', 'uranus-tooltip', 'neptune-tooltip',
+    'ganymede-tooltip', 'titan-tooltip', 'callisto-tooltip', 'io-tooltip', 'europa-tooltip', 'triton-tooltip'
+  ];
+  
+  allTooltips.forEach(tooltipId => {
+    const tooltip = document.getElementById(tooltipId);
+    if (tooltip) {
+      tooltip.classList.remove('show');
+      tooltip.style.display = 'none';
     }
-  }
+  });
+  
+  // Show appropriate tooltip for current focus after a brief delay
+  setTimeout(() => {
+    const tooltipId = `${newFocus.toLowerCase()}-tooltip`;
+    const currentTooltip = document.getElementById(tooltipId);
+    if (currentTooltip) {
+      currentTooltip.style.display = 'block';
+      setTimeout(() => {
+        currentTooltip.classList.add('show');
+      }, 50);
+    }
+  }, 100);
 };
 
 // Camera
@@ -100,11 +111,11 @@ solarSystem["Sun"].mesh.add(camera);
 
 // Show tooltip for Sun on initial load
 setTimeout(() => {
-  const spaceTooltip = document.getElementById('space-tooltip');
-  if (spaceTooltip && options.focus === 'Sun') {
-    spaceTooltip.style.display = 'block';
+  const sunTooltip = document.getElementById('space-tooltip');
+  if (sunTooltip && options.focus === 'Sun') {
+    sunTooltip.style.display = 'block';
     setTimeout(() => {
-      spaceTooltip.classList.add('show');
+      sunTooltip.classList.add('show');
     }, 100);
   }
 }, 1000); // Wait for solar system to fully load

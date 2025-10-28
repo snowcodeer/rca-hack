@@ -114,51 +114,565 @@
       </button>
     </div>
         <div class="caption" style="display: none;">
-          <button id="btn-previous">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20">
-              <path
-                d="M10 20A10 10 0 1 0 0 10a10 10 0 0 0 10 10zm1.289-15.7 1.422 1.4-4.3 4.344 4.289 4.245-1.4 1.422-5.714-5.648z"
-              />
-            </svg>
-          </button>
-          <p>Sun</p>
-          <button id="btn-next">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20">
-              <path
-                d="M10 20A10 10 0 1 0 0 10a10 10 0 0 0 10 10zM8.711 4.3l5.7 5.766L8.7 15.711l-1.4-1.422 4.289-4.242-4.3-4.347z"
-              />
-            </svg>
-          </button>
-        </div>
+      <button id="btn-previous">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20">
+          <path
+            d="M10 20A10 10 0 1 0 0 10a10 10 0 0 0 10 10zm1.289-15.7 1.422 1.4-4.3 4.344 4.289 4.245-1.4 1.422-5.714-5.648z"
+          />
+        </svg>
+      </button>
+      <p>Sun</p>
+      <button id="btn-next">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20">
+          <path
+            d="M10 20A10 10 0 1 0 0 10a10 10 0 0 0 10 10zM8.711 4.3l5.7 5.766L8.7 15.711l-1.4-1.422 4.289-4.242-4.3-4.347z"
+          />
+        </svg>
+      </button>
+    </div>
         
-        <!-- Geometric Futuristic Tooltip -->
-        <div id="space-tooltip" class="space-tooltip" style="display: none;">
-          <div class="tooltip-frame">
-            <div class="tooltip-header">
-              <div class="tooltip-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="5"/>
-                  <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"/>
-                </svg>
-              </div>
-              <div class="tooltip-title">Sun (Sol)</div>
-            </div>
-            <div class="tooltip-content">
-              <div class="tooltip-row">
-                <div class="tooltip-label">Surface Temperature</div>
-                <div class="tooltip-value">~5,500 °C (9,932 °F)</div>
-              </div>
-              <div class="tooltip-row">
-                <div class="tooltip-label">Main Elements</div>
-                <div class="tooltip-value">~74% hydrogen, ~24% helium</div>
-              </div>
-              <div class="tooltip-row">
-                <div class="tooltip-label">Rotation Period</div>
-                <div class="tooltip-value">~25 days at the equator</div>
-              </div>
-            </div>
+    <!-- Geometric Futuristic Tooltips -->
+    <div id="space-tooltip" class="space-tooltip" style="display: none;">
+      <div class="tooltip-frame">
+        <div class="tooltip-header">
+          <div class="tooltip-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="5"/>
+              <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"/>
+            </svg>
+          </div>
+          <div class="tooltip-title">Sun (Sol)</div>
+        </div>
+        <div class="tooltip-content">
+          <div class="tooltip-row">
+            <div class="tooltip-label">Surface Temperature</div>
+            <div class="tooltip-value">~5,500 °C (9,932 °F)</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Main Elements</div>
+            <div class="tooltip-value">~74% hydrogen, ~24% helium</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Rotation Period</div>
+            <div class="tooltip-value">~25 days at the equator</div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Mercury Tooltip -->
+    <div id="mercury-tooltip" class="space-tooltip" style="display: none;">
+      <div class="tooltip-frame">
+        <div class="tooltip-header">
+          <div class="tooltip-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="8"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </div>
+          <div class="tooltip-title">Mercury</div>
+        </div>
+        <div class="tooltip-content">
+          <div class="tooltip-row">
+            <div class="tooltip-label">Distance from Sun</div>
+            <div class="tooltip-value">56 million km (0.39 AU)</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Day Length</div>
+            <div class="tooltip-value">4222.6 hours (176 Earth days)</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Year Length</div>
+            <div class="tooltip-value">88 Earth days</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Surface Temperature</div>
+            <div class="tooltip-value">427°C (800°F) day, -173°C (-280°F) night</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Venus Tooltip -->
+    <div id="venus-tooltip" class="space-tooltip" style="display: none;">
+      <div class="tooltip-frame">
+        <div class="tooltip-header">
+          <div class="tooltip-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="8"/>
+              <path d="M8 12h8"/>
+            </svg>
+          </div>
+          <div class="tooltip-title">Venus</div>
+        </div>
+        <div class="tooltip-content">
+          <div class="tooltip-row">
+            <div class="tooltip-label">Distance from Sun</div>
+            <div class="tooltip-value">108 million km (0.72 AU)</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Day Length</div>
+            <div class="tooltip-value">2802 hours (117 Earth days)</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Year Length</div>
+            <div class="tooltip-value">224 Earth days</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Surface Temperature</div>
+            <div class="tooltip-value">462°C (864°F) - hottest planet</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Earth Tooltip -->
+    <div id="earth-tooltip" class="space-tooltip" style="display: none;">
+      <div class="tooltip-frame">
+        <div class="tooltip-header">
+          <div class="tooltip-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="8"/>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+          </div>
+          <div class="tooltip-title">Earth</div>
+        </div>
+        <div class="tooltip-content">
+          <div class="tooltip-row">
+            <div class="tooltip-label">Distance from Sun</div>
+            <div class="tooltip-value">152 million km (1 AU)</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Day Length</div>
+            <div class="tooltip-value">24 hours</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Year Length</div>
+            <div class="tooltip-value">365.25 days</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Surface Temperature</div>
+            <div class="tooltip-value">15°C (59°F) average</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Moon Tooltip -->
+    <div id="moon-tooltip" class="space-tooltip" style="display: none;">
+      <div class="tooltip-frame">
+        <div class="tooltip-header">
+          <div class="tooltip-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+          </div>
+          <div class="tooltip-title">Moon</div>
+        </div>
+        <div class="tooltip-content">
+          <div class="tooltip-row">
+            <div class="tooltip-label">Distance from Earth</div>
+            <div class="tooltip-value">384,400 km</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Orbital Period</div>
+            <div class="tooltip-value">27.3 Earth days</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Surface Temperature</div>
+            <div class="tooltip-value">127°C (260°F) day, -173°C (-280°F) night</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Notable Features</div>
+            <div class="tooltip-value">Apollo 11 landing site, Tycho Crater</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mars Tooltip -->
+    <div id="mars-tooltip" class="space-tooltip" style="display: none;">
+      <div class="tooltip-frame">
+        <div class="tooltip-header">
+          <div class="tooltip-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="8"/>
+              <path d="M8 8h8v8H8z"/>
+            </svg>
+          </div>
+          <div class="tooltip-title">Mars</div>
+        </div>
+        <div class="tooltip-content">
+          <div class="tooltip-row">
+            <div class="tooltip-label">Distance from Sun</div>
+            <div class="tooltip-value">247 million km (1.52 AU)</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Day Length</div>
+            <div class="tooltip-value">24.7 hours</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Year Length</div>
+            <div class="tooltip-value">686 Earth days</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Surface Temperature</div>
+            <div class="tooltip-value">-65°C (-85°F) average</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Notable Features</div>
+            <div class="tooltip-value">Olympus Mons, Valles Marineris</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Jupiter Tooltip -->
+    <div id="jupiter-tooltip" class="space-tooltip" style="display: none;">
+      <div class="tooltip-frame">
+        <div class="tooltip-header">
+          <div class="tooltip-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="8"/>
+              <path d="M12 2v4m0 12v4m10-10h-4m-12 0H2"/>
+            </svg>
+          </div>
+          <div class="tooltip-title">Jupiter</div>
+        </div>
+        <div class="tooltip-content">
+          <div class="tooltip-row">
+            <div class="tooltip-label">Distance from Sun</div>
+            <div class="tooltip-value">741 million km (5.2 AU)</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Day Length</div>
+            <div class="tooltip-value">9.9 hours</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Year Length</div>
+            <div class="tooltip-value">4332 Earth days (11.9 years)</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Composition</div>
+            <div class="tooltip-value">Gas giant - hydrogen & helium</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Notable Features</div>
+            <div class="tooltip-value">Great Red Spot storm</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Saturn Tooltip -->
+    <div id="saturn-tooltip" class="space-tooltip" style="display: none;">
+      <div class="tooltip-frame">
+        <div class="tooltip-header">
+          <div class="tooltip-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="8"/>
+              <path d="M12 2a10 10 0 0 0-10 10 10 10 0 0 0 10 10 10 10 0 0 0 10-10 10 10 0 0 0-10-10z"/>
+            </svg>
+          </div>
+          <div class="tooltip-title">Saturn</div>
+        </div>
+        <div class="tooltip-content">
+          <div class="tooltip-row">
+            <div class="tooltip-label">Distance from Sun</div>
+            <div class="tooltip-value">1463 million km (9.5 AU)</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Day Length</div>
+            <div class="tooltip-value">10.7 hours</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Year Length</div>
+            <div class="tooltip-value">10755 Earth days (29.4 years)</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Composition</div>
+            <div class="tooltip-value">Gas giant - hydrogen & helium</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Notable Features</div>
+            <div class="tooltip-value">Ring system, Saturn's Hexagon</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Uranus Tooltip -->
+    <div id="uranus-tooltip" class="space-tooltip" style="display: none;">
+      <div class="tooltip-frame">
+        <div class="tooltip-header">
+          <div class="tooltip-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="8"/>
+              <path d="M12 2l3 6-3 6-3-6z"/>
+            </svg>
+          </div>
+          <div class="tooltip-title">Uranus</div>
+        </div>
+        <div class="tooltip-content">
+          <div class="tooltip-row">
+            <div class="tooltip-label">Distance from Sun</div>
+            <div class="tooltip-value">2938 million km (19.2 AU)</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Day Length</div>
+            <div class="tooltip-value">17.2 hours</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Year Length</div>
+            <div class="tooltip-value">30687 Earth days (84 years)</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Axial Tilt</div>
+            <div class="tooltip-value">98° - rotates on its side</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Composition</div>
+            <div class="tooltip-value">Ice giant - water, methane, ammonia</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Neptune Tooltip -->
+    <div id="neptune-tooltip" class="space-tooltip" style="display: none;">
+      <div class="tooltip-frame">
+        <div class="tooltip-header">
+          <div class="tooltip-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="8"/>
+              <path d="M12 2a10 10 0 0 1 10 10 10 10 0 0 1-10 10 10 10 0 0 1-10-10 10 10 0 0 1 10-10z"/>
+            </svg>
+          </div>
+          <div class="tooltip-title">Neptune</div>
+        </div>
+        <div class="tooltip-content">
+          <div class="tooltip-row">
+            <div class="tooltip-label">Distance from Sun</div>
+            <div class="tooltip-value">4474 million km (30.1 AU)</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Day Length</div>
+            <div class="tooltip-value">16.1 hours</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Year Length</div>
+            <div class="tooltip-value">60190 Earth days (164.8 years)</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Composition</div>
+            <div class="tooltip-value">Ice giant - water, methane, ammonia</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Notable Features</div>
+            <div class="tooltip-value">Great Dark Spot, fastest winds</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ganymede Tooltip -->
+    <div id="ganymede-tooltip" class="space-tooltip" style="display: none;">
+      <div class="tooltip-frame">
+        <div class="tooltip-header">
+          <div class="tooltip-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="6"/>
+              <path d="M12 6v12"/>
+            </svg>
+          </div>
+          <div class="tooltip-title">Ganymede</div>
+        </div>
+        <div class="tooltip-content">
+          <div class="tooltip-row">
+            <div class="tooltip-label">Parent Planet</div>
+            <div class="tooltip-value">Jupiter</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Orbital Period</div>
+            <div class="tooltip-value">7.15 Earth days</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Size</div>
+            <div class="tooltip-value">Largest moon in solar system</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Composition</div>
+            <div class="tooltip-value">Rock & ice with subsurface ocean</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Titan Tooltip -->
+    <div id="titan-tooltip" class="space-tooltip" style="display: none;">
+      <div class="tooltip-frame">
+        <div class="tooltip-header">
+          <div class="tooltip-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="6"/>
+              <path d="M8 12h8"/>
+            </svg>
+          </div>
+          <div class="tooltip-title">Titan</div>
+        </div>
+        <div class="tooltip-content">
+          <div class="tooltip-row">
+            <div class="tooltip-label">Parent Planet</div>
+            <div class="tooltip-value">Saturn</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Orbital Period</div>
+            <div class="tooltip-value">15.95 Earth days</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Atmosphere</div>
+            <div class="tooltip-value">Dense nitrogen atmosphere</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Notable Features</div>
+            <div class="tooltip-value">Lakes of liquid methane & ethane</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Callisto Tooltip -->
+    <div id="callisto-tooltip" class="space-tooltip" style="display: none;">
+      <div class="tooltip-frame">
+        <div class="tooltip-header">
+          <div class="tooltip-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="6"/>
+              <circle cx="12" cy="12" r="2"/>
+            </svg>
+          </div>
+          <div class="tooltip-title">Callisto</div>
+        </div>
+        <div class="tooltip-content">
+          <div class="tooltip-row">
+            <div class="tooltip-label">Parent Planet</div>
+            <div class="tooltip-value">Jupiter</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Orbital Period</div>
+            <div class="tooltip-value">16.69 Earth days</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Surface</div>
+            <div class="tooltip-value">Heavily cratered, ancient surface</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Composition</div>
+            <div class="tooltip-value">Rock & ice mixture</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Io Tooltip -->
+    <div id="io-tooltip" class="space-tooltip" style="display: none;">
+      <div class="tooltip-frame">
+        <div class="tooltip-header">
+          <div class="tooltip-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="6"/>
+              <path d="M12 2l2 4-2 4-2-4z"/>
+            </svg>
+          </div>
+          <div class="tooltip-title">Io</div>
+        </div>
+        <div class="tooltip-content">
+          <div class="tooltip-row">
+            <div class="tooltip-label">Parent Planet</div>
+            <div class="tooltip-value">Jupiter</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Orbital Period</div>
+            <div class="tooltip-value">1.77 Earth days</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Notable Features</div>
+            <div class="tooltip-value">Most volcanically active body</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Surface</div>
+            <div class="tooltip-value">Sulfur compounds, lava flows</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Europa Tooltip -->
+    <div id="europa-tooltip" class="space-tooltip" style="display: none;">
+      <div class="tooltip-frame">
+        <div class="tooltip-header">
+          <div class="tooltip-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="6"/>
+              <path d="M12 2a10 10 0 0 1 10 10 10 10 0 0 1-10 10 10 10 0 0 1-10-10 10 10 0 0 1 10-10z"/>
+            </svg>
+          </div>
+          <div class="tooltip-title">Europa</div>
+        </div>
+        <div class="tooltip-content">
+          <div class="tooltip-row">
+            <div class="tooltip-label">Parent Planet</div>
+            <div class="tooltip-value">Jupiter</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Orbital Period</div>
+            <div class="tooltip-value">3.55 Earth days</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Surface</div>
+            <div class="tooltip-value">Ice shell with cracks & ridges</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Notable Features</div>
+            <div class="tooltip-value">Subsurface ocean, potential life</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Triton Tooltip -->
+    <div id="triton-tooltip" class="space-tooltip" style="display: none;">
+      <div class="tooltip-frame">
+        <div class="tooltip-header">
+          <div class="tooltip-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="6"/>
+              <path d="M12 2l-2 4 2 4 2-4z"/>
+            </svg>
+          </div>
+          <div class="tooltip-title">Triton</div>
+        </div>
+        <div class="tooltip-content">
+          <div class="tooltip-row">
+            <div class="tooltip-label">Parent Planet</div>
+            <div class="tooltip-value">Neptune</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Orbital Period</div>
+            <div class="tooltip-value">5.87 Earth days</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Orbit Direction</div>
+            <div class="tooltip-value">Retrograde (backwards)</div>
+          </div>
+          <div class="tooltip-row">
+            <div class="tooltip-label">Notable Features</div>
+            <div class="tooltip-value">Geysers, nitrogen ice</div>
+          </div>
+        </div>
+      </div>
+    </div>
     
     <script type="module" src="./main.tsx"></script>
   </body>
