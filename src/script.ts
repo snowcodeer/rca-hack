@@ -13,6 +13,7 @@ import { eventBus } from "./voice/eventBus";
 import { VoiceNavigationController } from "./voice/navigation";
 import { WelcomeNarrator } from "./voice/welcomeNarrator";
 import { PlanetNarrator } from "./voice/planetNarrator";
+import { NarrationUI } from "./voice/narrationUi";
 import { HandTrackerV2 } from "./hand-tracking/hand-tracker";
 import { GestureEngine } from "./hand-tracking/gesture-engine";
 import { HandGestureControlsV2 } from "./hand-tracking/hand-gesture-controls-v2";
@@ -1086,6 +1087,7 @@ voiceNavigation.attachUI({
 
 new WelcomeNarrator(planetNames, options.narrationEnabled, options.focus);
 const planetNarrator = new PlanetNarrator();
+new NarrationUI(planetNarrator, () => options.focus);
 
 eventBus.on("voiceCommand", (intent) => {
   switch (intent.type) {
@@ -1108,11 +1110,9 @@ eventBus.on("voiceCommand", (intent) => {
       });
       break;
     case "narrate":
-      planetNarrator.play(intent.target);
       break;
     case "stop":
       planetNarrator.stop();
-      // Future: pause narration or other behaviours.
       break;
     default:
       break;

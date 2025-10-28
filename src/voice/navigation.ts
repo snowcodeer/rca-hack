@@ -35,24 +35,9 @@ const COMMAND_SYNONYMS = {
     "focus",
     "move to",
     "move toward",
-    "move over to"
-  ],
-  next: ["next", "next planet", "forward"],
-  previous: ["previous", "prev", "back", "backwards"],
-  repeat: ["repeat", "again"],
-  stop: ["stop", "cancel", "pause"],
-  narrate: [
-    "tell me about",
-    "tell me more about",
-    "describe",
-    "talk about",
-    "narrate",
-    "play narration for",
-    "play the narration for",
-    "play audio for",
-    "give me the story of",
-    "give me a story about",
-    "share facts about"
+    "move over to",
+    "bring me to",
+    "take me to",
   ],
 };
 
@@ -311,36 +296,6 @@ export class VoiceNavigationController {
       return null;
     }
 
-    if (this.matchesAny(normalized, COMMAND_SYNONYMS.next)) {
-      return { type: "next", transcript, normalized };
-    }
-
-    if (this.matchesAny(normalized, COMMAND_SYNONYMS.previous)) {
-      return { type: "previous", transcript, normalized };
-    }
-
-    if (this.matchesAny(normalized, COMMAND_SYNONYMS.repeat)) {
-      return { type: "repeat", transcript, normalized };
-    }
-
-    if (this.matchesAny(normalized, COMMAND_SYNONYMS.stop)) {
-      return { type: "stop", transcript, normalized };
-    }
-
-    const narratePhrase = this.detectNarratePhrase(normalized);
-    if (narratePhrase) {
-      const candidate = this.cleanCandidate(narratePhrase);
-      const match = this.resolvePlanet(candidate);
-      if (match && match.score >= 0.45) {
-        return {
-          type: "narrate",
-          target: match.name,
-          transcript,
-          normalized,
-        };
-      }
-    }
-
     const openPhrase = this.detectOpenPhrase(normalized);
     if (openPhrase) {
       const candidate = this.cleanCandidate(openPhrase);
@@ -368,20 +323,6 @@ export class VoiceNavigationController {
       /(?:open|go to|goto|show|focus on|focus)\s+(.+)/,
       /(?:move to|move toward|move over to)\s+(.+)/,
       /(?:bring me to|take me to)\s+(.+)/,
-    ];
-    for (const pattern of patterns) {
-      const match = text.match(pattern);
-      if (match && match[1]) {
-        return match[1];
-      }
-    }
-    return null;
-  }
-
-  private detectNarratePhrase(text: string): string | null {
-    const patterns = [
-      /(?:tell me about|tell me more about|narrate|describe|talk about|play (?:the )?narration for|play audio for|give me (?:the )?story of|give me a story about)\s+(.+)/,
-      /(?:what can you tell me about|share facts about)\s+(.+)/,
     ];
     for (const pattern of patterns) {
       const match = text.match(pattern);
@@ -477,16 +418,6 @@ export class VoiceNavigationController {
     switch (intent.type) {
       case "open":
         return `Opening ${intent.target}`;
-      case "next":
-        return "Moving to next planet";
-      case "previous":
-        return "Moving to previous planet";
-      case "repeat":
-        return "Repeat request received";
-      case "stop":
-        return "Stop command received";
-      case "narrate":
-        return `Narrating ${intent.target}`;
       default:
         return "Command processed";
     }
@@ -600,22 +531,6 @@ export class VoiceNavigationController {
           type: "open",
           target,
           confidence: typeof si.confidence === "number" ? si.confidence : 0.9,
-          transcript: si.transcript || "",
-          normalized: si.normalized || "",
-        };
-      }
-    }
-    if (type === "next") return { type: "next", transcript: si.transcript || "", normalized: si.normalized || "" } as const;
-    if (type === "previous")
-      return { type: "previous", transcript: si.transcript || "", normalized: si.normalized || "" } as const;
-    if (type === "repeat") return { type: "repeat", transcript: si.transcript || "", normalized: si.normalized || "" } as const;
-    if (type === "stop") return { type: "stop", transcript: si.transcript || "", normalized: si.normalized || "" } as const;
-    if (type === "narrate" && typeof si.target === "string") {
-      const target = this.planetNames.find((p) => p.toLowerCase() === si.target.toLowerCase());
-      if (target) {
-        return {
-          type: "narrate",
-          target,
           transcript: si.transcript || "",
           normalized: si.normalized || "",
         };

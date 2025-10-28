@@ -1,5 +1,4 @@
 import narrationData from "./narration-data.json";
-import { eventBus } from "./eventBus";
 
 type NarrationEntry = {
   name: string;
@@ -29,16 +28,7 @@ export class PlanetNarrator {
   private readonly clips = new Map<string, HTMLAudioElement>();
   private current: HTMLAudioElement | null = null;
 
-  constructor() {
-    eventBus.on("voiceCommand", (intent) => {
-      if (intent.type === "narrate") {
-        this.play(intent.target);
-      }
-      if (intent.type === "stop") {
-        this.stop();
-      }
-    });
-  }
+  constructor() {}
 
   play(target: string): void {
     if (!target) {

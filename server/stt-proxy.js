@@ -250,46 +250,16 @@ const COMMAND_SYNONYMS = {
     "focus",
     "move to",
     "move toward",
-    "move over to"
-  ],
-  next: ["next", "next planet", "forward"],
-  previous: ["previous", "prev", "back", "backwards"],
-  repeat: ["repeat", "again"],
-  stop: ["stop", "cancel", "pause"],
-  narrate: [
-    "tell me about",
-    "tell me more about",
-    "describe",
-    "talk about",
-    "narrate",
-    "play narration for",
-    "play the narration for",
-    "play audio for",
-    "give me the story of",
-    "give me a story about",
-    "share facts about"
+    "move over to",
+    "bring me to",
+    "take me to",
   ],
 };
 
 function classifyIntent(transcript, candidates) {
   if (!transcript || typeof transcript !== "string") return null;
   const normalized = transcript.toLowerCase();
-  const simple = (phrases) => phrases.some((p) => normalized.includes(p));
-  if (simple(COMMAND_SYNONYMS.next)) return { type: "next", transcript, normalized };
-  if (simple(COMMAND_SYNONYMS.previous)) return { type: "previous", transcript, normalized };
-  if (simple(COMMAND_SYNONYMS.repeat)) return { type: "repeat", transcript, normalized };
-  if (simple(COMMAND_SYNONYMS.stop)) return { type: "stop", transcript, normalized };
-
-  const narrateMatch = detectNarrateTarget(normalized);
-  if (narrateMatch) {
-    const candidate = cleanCandidate(narrateMatch);
-    const target = resolveCandidate(candidate, candidates || []);
-    if (target && target.score >= 0.45) {
-      return { type: "narrate", target: target.name, confidence: target.score, transcript, normalized };
-    }
-  }
-
-  const m = normalized.match(/(?:open|go to|goto|show|focus on|focus|move to|move toward|move over to)\s+(.+)/);
+  const m = normalized.match(/(?:open|go to|goto|show|focus on|focus|move to|move toward|move over to|bring me to|take me to)\s+(.+)/);
   let targetCandidate = m && m[1] ? m[1] : normalized;
   targetCandidate = cleanCandidate(targetCandidate);
   const target = resolveCandidate(targetCandidate, candidates || []);
@@ -343,20 +313,7 @@ function cleanCandidate(raw) {
   return raw.replace(/[.?!,]/g, " ").trim();
 }
 
-function detectNarrateTarget(text) {
-  if (!text) return null;
-  const patterns = [
-    /(?:tell me about|tell me more about|narrate|describe|talk about|play (?:the )?narration for|play audio for|give me (?:the )?story of|give me a story about)\s+(.+)/,
-    /(?:what can you tell me about|share facts about)\s+(.+)/,
-  ];
-  for (const pattern of patterns) {
-    const match = text.match(pattern);
-    if (match && match[1]) {
-      return match[1];
-    }
-  }
-  return null;
-}
+// Narration via voice commands is intentionally unsupported; UI handles narration playback.
 
 function similarity(a, b) {
   if (a === b) return 1;
