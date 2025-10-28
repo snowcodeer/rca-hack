@@ -16,7 +16,8 @@ export const createGUI = (
   ambientLight: THREE.AmbientLight,
   solarSystem: SolarSystem,
   clock: THREE.Clock,
-  camera: THREE.Camera
+  camera: THREE.Camera,
+  handControls?: any
 ) => {
   const gui = new dat.GUI();
 
@@ -47,6 +48,37 @@ export const createGUI = (
 
   // Control the simulation speed
   gui.add(options, "speed", 0.1, 20, 0.1).name("Speed");
+
+  // Hand tracking controls (if available)
+  if (handControls) {
+    const handFolder = gui.addFolder("Hand Controls");
+    
+    handFolder.add({ enabled: true }, 'enabled')
+      .name('Enable Hand Gestures')
+      .onChange((value: boolean) => {
+        handControls.setEnabled(value);
+      });
+
+    handFolder.add({ zoomSensitivity: 10 }, 'zoomSensitivity', 1, 30)
+      .name('Zoom Sensitivity')
+      .onChange((value: number) => {
+        handControls.setSensitivity(value, undefined);
+      });
+
+    handFolder.add({ rotationSensitivity: 2 }, 'rotationSensitivity', 0.5, 10)
+      .name('Rotation Sensitivity')
+      .onChange((value: number) => {
+        handControls.setSensitivity(undefined, value);
+      });
+
+    handFolder.add({ deadZone: 0.1 }, 'deadZone', 0, 0.5)
+      .name('Dead Zone')
+      .onChange((value: number) => {
+        handControls.setDeadZone(value);
+      });
+      
+    handFolder.close();
+  }
 
   gui.hide();
 
