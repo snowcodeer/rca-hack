@@ -568,39 +568,63 @@ function initializePlanetaryFeatures() {
   });
 }
 
-function checkFeatureVisibility() {
+function hideAllFeatureIcons() {
   Object.keys(planetaryFeatures).forEach(planetName => {
-    const planet = solarSystem[planetName];
-    if (planet && planetName === options.focus) {
+    planetaryFeatures[planetName].forEach(feature => {
+      if (feature.mesh) {
+        feature.visible = false;
+        feature.mesh.visible = false;
+        hideFeatureTooltip(feature);
+      }
+    });
+  });
+}
+
+function checkFeatureVisibility() {
+  // First hide all feature icons from other planets
+  Object.keys(planetaryFeatures).forEach(planetName => {
+    if (planetName !== options.focus) {
       planetaryFeatures[planetName].forEach(feature => {
         if (feature.mesh) {
-          // Calculate if feature is facing the camera
-          const featureWorldPosition = new THREE.Vector3();
-          feature.mesh.getWorldPosition(featureWorldPosition);
-          
-          const cameraDirection = new THREE.Vector3();
-          fakeCamera.getWorldDirection(cameraDirection);
-          
-          const featureDirection = new THREE.Vector3()
-            .subVectors(featureWorldPosition, fakeCamera.position)
-            .normalize();
-          
-          const dotProduct = cameraDirection.dot(featureDirection);
-          const shouldBeVisible = dotProduct > 0.3; // Feature is visible if facing camera
-          
-          if (shouldBeVisible && !feature.visible) {
-            feature.visible = true;
-            feature.mesh.visible = true;
-            showFeatureTooltip(feature);
-          } else if (!shouldBeVisible && feature.visible) {
-            feature.visible = false;
-            feature.mesh.visible = false;
-            hideFeatureTooltip(feature);
-          }
+          feature.visible = false;
+          feature.mesh.visible = false;
+          hideFeatureTooltip(feature);
         }
       });
     }
   });
+  
+  // Then check visibility for the current planet
+  const planet = solarSystem[options.focus];
+  if (planet && planetaryFeatures[options.focus]) {
+    planetaryFeatures[options.focus].forEach(feature => {
+      if (feature.mesh) {
+        // Calculate if feature is facing the camera
+        const featureWorldPosition = new THREE.Vector3();
+        feature.mesh.getWorldPosition(featureWorldPosition);
+        
+        const cameraDirection = new THREE.Vector3();
+        fakeCamera.getWorldDirection(cameraDirection);
+        
+        const featureDirection = new THREE.Vector3()
+          .subVectors(featureWorldPosition, fakeCamera.position)
+          .normalize();
+        
+        const dotProduct = cameraDirection.dot(featureDirection);
+        const shouldBeVisible = dotProduct > 0.3; // Feature is visible if facing camera
+        
+        if (shouldBeVisible && !feature.visible) {
+          feature.visible = true;
+          feature.mesh.visible = true;
+          showFeatureTooltip(feature);
+        } else if (!shouldBeVisible && feature.visible) {
+          feature.visible = false;
+          feature.mesh.visible = false;
+          hideFeatureTooltip(feature);
+        }
+      }
+    });
+  }
 }
 
 function showFeatureTooltip(feature: PlanetaryFeature) {
@@ -678,6 +702,9 @@ const changeFocus = (oldFocus: string, newFocus: string) => {
       tooltip.style.display = 'none';
     }
   });
+  
+  // Hide all feature icons from all planets
+  hideAllFeatureIcons();
   
   // Show appropriate tooltip for current focus after a brief delay
   setTimeout(() => {
