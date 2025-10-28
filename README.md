@@ -1,59 +1,140 @@
-# Solar System Model
+# INTERACTIVE LEARNING FRAMEWORK  
+(Example Deployment: **Cosmon — Hand + Voice Interactive Solar System**)  
 
-3D model of the solar system allowing traversal of all the planets. Provides labels showcasing points of interest on certain planets such as _Olympus Mons_ on Mars. This model was created using Three.js and is currently serving as a tool to enhance my learning whilst progressing through Three.js journey.
+A modular platform for **real-time, multimodal educational experiences**, combining **3D visualization**, **hand-gesture interaction**, and **voice navigation**.  
+Built for museums, classrooms, and immersive learning environments — adaptable to any educational domain (space, anatomy, geography, engineering, etc.).
 
-## Current features
+---
 
-- Orbits
-- Textures
-- Loading screen
-- Environment
-- Lighting and Shadows
-- Moons
-- POI labels
-- Custom controls
-- Orbit paths
-- Sun bloom effect
+## 🌍 What This Framework Enables
 
-## Planned changes
+- **Touch-free interactivity** for public and classroom environments.  
+- **Embodied learning** — students learn by moving, gesturing, and speaking, not just clicking.  
+- **Multimodal accessibility** — gestures, voice, and visual feedback work together naturally.  
+- **Reusable architecture** — plug in different 3D scenes (solar system, molecule, cell, city model).  
 
-- [ ] Earth night time texture
-- [ ] Planet information panel
-- [ ] Accuracy of distances
-- [ ] Improve shadow quality
+---
 
-## Setup
+## 🪐 Example Use Case — COSMON
 
-Download [Node.js](https://nodejs.org/en/download/).
-Run the following commands:
+**Cosmon** is the showcase implementation of this framework:  
+an immersive, real-time **3D solar system** built with **Three.js**, powered by **MediaPipe hand-gesture controls** and **voice navigation** (via a local ElevenLabs STT proxy).
 
+Designed for museums, science centers, and classrooms, *Cosmon* turns astronomy education into a tactile, embodied experience.
+
+---
+
+## 🧠 Potential Adaptations by Domain
+
+| Domain | Example Experience | Learning Outcome |
+|--------|-------------------|------------------|
+| **Biology** | 3D human anatomy you can rotate with gestures and explore organs by voice | Spatial understanding of body systems |
+| **Geography** | Interactive Earth model — zoom into continents, say “Show Africa” | Geospatial awareness |
+| **Physics** | Manipulate forces or vectors with hand motions | Kinesthetic visualization of physical laws |
+| **Chemistry** | Build molecules by “grabbing” atoms in space | Structural chemistry understanding |
+| **History / Art** | Explore 3D reconstructions of ancient cities | Immersive contextual learning |
+
+---
+
+## 🎯 Who This Is For
+
+- **Museums / Science Centers** – durable, touch-free installations.  
+- **K-12 & Higher Education** – active learning in classrooms and labs.  
+- **Libraries / Makerspaces** – public STEM exploration kiosks.  
+- **Corporate / Training Environments** – interactive simulations for onboarding or safety demos.  
+
+---
+
+## 💡 Why It Matters
+
+- **Natural Interaction:** No controllers or menus — just hand and voice.  
+- **Inclusive Learning:** Works across abilities and ages.  
+- **Memory Retention:** Kinesthetic engagement increases recall.  
+- **Scalable:** Same engine powers multiple domains with scene swaps.  
+
+---
+
+## 🧩 Core Features
+
+- **3D Visualization Engine** (Three.js) with lighting, bloom, and physics.  
+- **Gesture Recognition** (MediaPipe Tasks Vision):  
+  - ✋ *Open palm*: zoom out  
+  - ✊ *Closed fist*: zoom in  
+  - ☝️ *One finger up*: orbit/rotate  
+  - ✌️ *Two fingers*: toggle voice listening  
+- **Voice Navigation** (Local proxy to ElevenLabs STT):  
+  - “Open Mars,” “Next,” “Explain,” “Repeat.”  
+- **Configurable Scene API:** Load any educational 3D dataset (planets, molecules, maps).  
+- **On-screen Controls:** Lighting, labels, annotations, and accessibility settings.  
+
+---
+
+## 🧱 Tech Stack
+
+| Layer | Technology |
+|-------|-------------|
+| **Rendering** | Three.js + OrbitControls + UnrealBloomPass |
+| **Gestures** | Google MediaPipe Tasks Vision |
+| **Voice** | Local Node.js proxy → ElevenLabs STT |
+| **UI / Build** | Vite + Tailwind + lil-gui |
+| **Interaction Logic** | TypeScript modular event bus (gesture → camera → voice intent) |
+
+---
+
+## ⚙️ Getting Started
+
+### 1. Install Dependencies
 ```bash
-# Install dependencies
 npm install
+2. (Optional) Configure Voice STT Proxy
+Create .env.local:
 
-# Run the local server
+ini
+Copy code
+ELEVENLABS_API_KEY=your_key_here
+STT_PROXY_PORT=4000
+Run proxy:
+
+bash
+Copy code
+npm run stt-proxy
+3. Run the App
+bash
+Copy code
 npm run dev
-
-# Build for production in the dist/ directory
+4. Build for Deployment
+bash
+Copy code
 npm run build
-```
+🕹️ Controls Summary
+Input	Action
+Mouse	Orbit (drag), zoom (wheel)
+Hand Gestures	Pinch = zoom, one-finger slide = rotate, peace sign = toggle voice
+Voice	“Open Mars,” “Next,” “Previous,” “Stop,” “Repeat.”
 
-## Screenshots
+🧩 Architecture Overview
+Gesture Engine: Smooths MediaPipe landmark data, stabilizes via hysteresis, outputs compact Snapshot.
 
-![Sun](https://github.com/KyleGough/solar-system/assets/24881448/194f78d5-b35b-4661-bdae-85fd06f7a94f)
-![Earth](https://github.com/KyleGough/solar-system/assets/24881448/ca9ca06e-36a7-46f8-91cc-5942df1e3906)
-![Moon](https://github.com/KyleGough/solar-system/assets/24881448/d22fcdad-d7bc-4bf1-b026-9967317b1a69)
-![Mars](https://github.com/KyleGough/solar-system/assets/24881448/7b6806d4-d8ff-400e-8405-afb8f189acbc)
-![Neptune](https://github.com/KyleGough/solar-system/assets/24881448/a5677621-40ab-4aa5-a14e-f928010e1806)
+Control Bridge: Converts snapshots into camera motions using spherical coordinates.
 
-## Resources
+Voice Intent Engine: Records short clips, sends to proxy, maps STT → intent → event.
 
-- **The Sun, Jupiter, Saturn, Uranus, and Neptune** - [https://www.solarsystemscope.com/textures/](https://www.solarsystemscope.com/textures/)
-- **Terrestrial Planets** - [https://planetpixelemporium.com/planets.html](https://planetpixelemporium.com/planets.html)
-- **Moon** - [https://svs.gsfc.nasa.gov/4720](https://svs.gsfc.nasa.gov/4720)
-- **Ganymede** - [https://www.deviantart.com/askaniy/art/Ganymede-Texture-Map-11K-808732114](https://www.deviantart.com/askaniy/art/Ganymede-Texture-Map-11K-808732114)
-- **Titan** - [https://planet-texture-maps.fandom.com/wiki/Titan](https://planet-texture-maps.fandom.com/wiki/Titan)
-- **Callisto** - [http://bjj.mmedia.is/data/callisto/](http://bjj.mmedia.is/data/callisto/)
-- **Io** - [https://phys.org/news/2014-12-solar-worlds-distant-exoplanets.html](https://phys.org/news/2014-12-solar-worlds-distant-exoplanets.html)
-- **Europa** - [https://www.johnstonsarchive.net/spaceart/cylmaps.html](https://www.johnstonsarchive.net/spaceart/cylmaps.html)
-- **Triton** - [https://www.go-astronomy.com/planets/neptune-moon-triton.htm](https://www.go-astronomy.com/planets/neptune-moon-triton.htm)
+Scene Abstraction: Each domain defines its own SceneModule (planets, anatomy, geography).
+
+🧪 Known Requirements
+Camera + mic permission required.
+
+All landmark detection runs locally in browser.
+
+Use Node 20 LTS on Windows (Tailwind/lightningcss support).
+
+🚀 Roadmap
+🔍 Domain-agnostic “Scene Plugin” loader (e.g., /scenes/biology/, /scenes/chemistry/)
+
+🧭 Educator-curated narration layers and quiz overlays
+
+🧑‍🏫 Multi-user “class mode” with shared state
+
+♿ Full accessibility: captions, keyboard + gesture parity
+
+🖥️ Kiosk-mode: idle attract loop + auto-reset
