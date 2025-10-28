@@ -77,6 +77,9 @@ export class GestureEngine implements GestureStateReader {
   private calibration: CalibrationData;
   private lastSnapshot: GestureSnapshot;
   private previousValues: { pinch: number; yaw: number; pitch: number } | null = null;
+  // Track fingertip lateral motion for one-finger slide control
+  private lastIndexTipX: number | null = null;
+  private lastTimestampMs: number | null = null;
   
   // Finger gesture recognition (now the only system)
   private gestureRecognizer: GestureRecognizer;
@@ -147,21 +150,46 @@ export class GestureEngine implements GestureStateReader {
       switch (fingerGesture.gesture) {
         case 'open_palm':
           mode = 'Zoom';
-          pinchDelta = -0.8; // Zoom out (stronger)
+          pinchDelta = -0.8; // Zoom out
           break;
         case 'closed_fist':
           mode = 'Zoom';
-          pinchDelta = 0.8; // Zoom in (stronger)
+          pinchDelta = 0.8; // Zoom in
           break;
-        case 'one_finger':
+        case 'one_finger': {
+          // Slide-based rotation: use index fingertip horizontal velocity
           mode = 'Orbit';
-          yaw = -0.4; // Rotate left (stronger)
+          const primary = landmarks[0];
+          const indexTip = primary && primary[8] ? primary[8] : null;
+          if (indexTip) {
+            const currentX = indexTip.x; // 0..1 image coords (right is larger)
+            if (this.lastIndexTipX !== null && this.lastTimestampMs !== null) {
+              const dt = Math.max(0.001, (tMs - this.lastTimestampMs) / 1000);
+              const vx = (currentX - this.lastIndexTipX) / dt; // units per second
+              // Gain to convert fingertip velocity to yaw rate (rad/s)
+              const gain = 2.0;
+              yaw = vx * gain; // right swipe -> positive yaw (rotate right)
+              // Limit extreme spikes
+              const MAX_YAW_RATE = Math.PI; // 180 deg/s cap
+              yaw = Math.max(-MAX_YAW_RATE, Math.min(MAX_YAW_RATE, yaw));
+            }
+            this.lastIndexTipX = currentX;
+            this.lastTimestampMs = tMs;
+          }
           break;
+        }
         case 'two_fingers':
+          // Optional: keep as Orbit with fixed small yaw to support legacy behavior
           mode = 'Orbit';
-          yaw = 0.4; // Rotate right (stronger)
+          yaw = 0; // No fixed rotation; gesture reserved if needed later
           break;
       }
+    }
+
+    // Reset fingertip tracker when not in one-finger mode to avoid stale deltas
+    if (fingerGesture.gesture !== 'one_finger') {
+      this.lastIndexTipX = null;
+      this.lastTimestampMs = tMs;
     }
 
     this.lastSnapshot = {

@@ -1,4 +1,5 @@
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import * as THREE from 'three';
 import { GestureSnapshot, GestureMode } from './gesture-types';
 
 /**
@@ -95,38 +96,34 @@ export class HandGestureControlsV2 {
    * Apply rotation using OrbitControls spherical coordinates
    */
   private applyRotation(gesture: GestureSnapshot, dt: number): void {
-    // Scale by dt for frame rate independence - use larger multiplier for more sensitivity
-    const yawDelta = gesture.yaw * this.yawGain * dt * 10; // Increased sensitivity
-    const pitchDelta = gesture.pitch * this.pitchGain * dt * 10; // Increased sensitivity
+    // Scale by dt for frame rate independence
+    const yawDelta = gesture.yaw * this.yawGain * dt * 10;
+    const pitchDelta = gesture.pitch * this.pitchGain * dt * 10;
 
     // Rate limit rotation speed
-    const clampedYaw = Math.max(-this.MAX_ROTATION_PER_FRAME, 
-                               Math.min(this.MAX_ROTATION_PER_FRAME, yawDelta));
-    const clampedPitch = Math.max(-this.MAX_ROTATION_PER_FRAME, 
-                                 Math.min(this.MAX_ROTATION_PER_FRAME, pitchDelta));
+    const clampedYaw = Math.max(-this.MAX_ROTATION_PER_FRAME,
+                                Math.min(this.MAX_ROTATION_PER_FRAME, yawDelta));
+    const clampedPitch = Math.max(-this.MAX_ROTATION_PER_FRAME,
+                                  Math.min(this.MAX_ROTATION_PER_FRAME, pitchDelta));
 
-    // Debug logging
-    if (Math.abs(gesture.yaw) > 0.01 || Math.abs(gesture.pitch) > 0.01) {
-      console.log('Gesture rotation:', { 
-        yaw: gesture.yaw, 
-        pitch: gesture.pitch, 
-        clampedYaw, 
-        clampedPitch,
-        mode: gesture.mode 
-      });
-    }
+    // Apply by manipulating spherical coordinates around target
+    const object = this.controls.object as THREE.Camera;
+    const target = this.controls.target;
+    const offset = object.position.clone().sub(target);
+    const spherical = new THREE.Spherical().setFromVector3(offset);
 
-    // Apply through OrbitControls spherical coordinates
-    // Note: Negative yaw because positive gesture yaw should rotate right
-    if (Math.abs(clampedYaw) > 0.001) {
-      this.controls.azimuthAngle -= clampedYaw;
-    }
-    
-    if (Math.abs(clampedPitch) > 0.001) {
-      this.controls.polarAngle += clampedPitch;
-      // Clamp polar angle to prevent flipping
-      this.controls.polarAngle = Math.max(0.01, Math.min(Math.PI - 0.01, this.controls.polarAngle));
-    }
+    // Positive yawDelta -> rotate right; Positive pitchDelta -> tilt down
+    spherical.theta += clampedYaw;
+    spherical.phi += clampedPitch;
+
+    // Clamp phi to avoid flipping over the poles
+    const EPS = 0.01;
+    spherical.phi = Math.max(EPS, Math.min(Math.PI - EPS, spherical.phi));
+
+    // Recompute position and look at target
+    const newPos = new THREE.Vector3().setFromSpherical(spherical);
+    object.position.copy(target).add(newPos);
+    object.lookAt(target);
   }
 
   /**
@@ -176,6 +173,11 @@ export class HandGestureControlsV2 {
     if (zoom !== undefined) this.zoomGain = Math.max(0.1, Math.min(5.0, zoom));
     if (yaw !== undefined) this.yawGain = Math.max(0.1, Math.min(5.0, yaw));
     if (pitch !== undefined) this.pitchGain = Math.max(0.1, Math.min(5.0, pitch));
+  }
+
+  // Compatibility: GUI calls this in v1; keep a no-op to avoid errors
+  setDeadZone(_value: number): void {
+    // No dead zone in v2; filtering handled in engine
   }
 
   /**
