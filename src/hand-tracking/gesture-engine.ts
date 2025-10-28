@@ -10,6 +10,7 @@ import {
 } from './gesture-types';
 import { GestureFilter } from './filters/one-euro';
 import { GestureRecognizer } from './gesture-recognizer';
+import { eventBus } from '../voice/eventBus';
 
 /**
  * State machine with hysteresis for gesture mode transitions
@@ -80,6 +81,9 @@ export class GestureEngine implements GestureStateReader {
   // Track fingertip lateral motion for one-finger slide control
   private lastIndexTipX: number | null = null;
   private lastTimestampMs: number | null = null;
+  // Debounce for gesture-based voice toggling
+  private lastVoiceToggleAt: number = 0;
+  private readonly VOICE_TOGGLE_COOLDOWN_MS = 1200;
   
   // Finger gesture recognition (now the only system)
   private gestureRecognizer: GestureRecognizer;
@@ -178,11 +182,19 @@ export class GestureEngine implements GestureStateReader {
           }
           break;
         }
-        case 'two_fingers':
-          // Optional: keep as Orbit with fixed small yaw to support legacy behavior
-          mode = 'Orbit';
-          yaw = 0; // No fixed rotation; gesture reserved if needed later
+        case 'two_fingers': {
+          // Peace sign toggles voice listen on/off with cooldown
+          if (tMs - this.lastVoiceToggleAt > this.VOICE_TOGGLE_COOLDOWN_MS) {
+            this.lastVoiceToggleAt = tMs;
+            try {
+              eventBus.emit('voiceListenToggle', {} as any);
+            } catch {}
+          }
+          // Do not rotate camera on this gesture
+          mode = 'Idle';
+          yaw = 0;
           break;
+        }
       }
     }
 

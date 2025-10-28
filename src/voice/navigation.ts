@@ -51,6 +51,20 @@ export class VoiceNavigationController {
     eventBus.on("voiceToggle", ({ enabled }) => {
       this.setEnabled(enabled);
     });
+    // Gesture-driven listen toggle
+    eventBus.on("voiceListenToggle", () => {
+      // If not enabled yet, enable and start listening
+      if (!this.enabled) {
+        this.setEnabled(true);
+      }
+      if (this.listening) {
+        this.stopRecording();
+      } else {
+        this.startRecording().catch((error) => {
+          this.handleError("Microphone access failed", error);
+        });
+      }
+    });
   }
 
   attachUI(bindings: VoiceUIBindings): void {
