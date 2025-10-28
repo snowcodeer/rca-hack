@@ -9,6 +9,9 @@ import { createLights } from "./setup/lights";
 import { createSolarSystem } from "./setup/solar-system";
 import { createGUI, options } from "./setup/gui";
 import { LAYERS } from "./constants";
+import { eventBus } from "./voice/eventBus";
+import { VoiceNavigationController } from "./voice/navigation";
+import { WelcomeNarrator } from "./voice/welcomeNarrator";
 import { HandTrackerV2 } from "./hand-tracking/hand-tracker";
 import { GestureEngine } from "./hand-tracking/gesture-engine";
 import { HandGestureControlsV2 } from "./hand-tracking/hand-gesture-controls-v2";
@@ -50,147 +53,6 @@ window.addEventListener("resize", () => {
   labelRenderer.setSize(sizes.width, sizes.height);
 });
 
-document.getElementById("btn-previous")?.addEventListener("click", () => {
-  const index = planetNames.indexOf(options.focus);
-  const newIndex = index === 0 ? planetNames.length - 1 : index - 1;
-  const focus = planetNames[newIndex];
-  changeFocus(options.focus, focus);
-  options.focus = focus;
-});
-
-document.getElementById("btn-next")?.addEventListener("click", () => {
-  const index = (planetNames.indexOf(options.focus) + 1) % planetNames.length;
-  const focus = planetNames[index];
-  changeFocus(options.focus, focus);
-  options.focus = focus;
-});
-
-// Hand tracking control buttons
-document.getElementById("btn-hand-toggle")?.addEventListener("click", async () => {
-  const currentState = handControls.getEnabled();
-  
-  if (!currentState) {
-    // Enabling hand controls
-    if (!isCameraRequested) {
-      // Show camera permission modal
-      showCameraModal();
-    } else {
-      // Camera already granted, just enable controls
-      handControls.setEnabled(true);
-      updateHandStatus('Enabled', 0, 'Show your hand to camera');
-      showHandHelp();
-      updateHandToggleButton(true);
-    }
-  } else {
-    // Disabling hand controls
-    handControls.setEnabled(false);
-    const statusDiv = document.getElementById('hand-status');
-    const helpDiv = document.getElementById('hand-help');
-    if (statusDiv) statusDiv.style.display = 'none';
-    if (helpDiv) helpDiv.style.display = 'none';
-    updateHandToggleButton(false);
-  }
-});
-
-function updateHandToggleButton(enabled: boolean) {
-  const button = document.getElementById("btn-hand-toggle");
-  if (button) {
-    button.style.backgroundColor = enabled ? '#4CAF50' : '';
-    button.title = enabled ? 'Disable Hand Controls' : 'Enable Hand Controls';
-  }
-}
-
-document.getElementById("btn-hand-debug")?.addEventListener("click", () => {
-  handTracker.toggleDebugView();
-  const button = document.getElementById("btn-hand-debug");
-  if (button) {
-    const isVisible = document.getElementById('hand-debug-canvas')?.style.display !== 'none';
-    button.style.backgroundColor = isVisible ? '#2196F3' : '';
-    button.title = isVisible ? 'Hide Hand Debug View' : 'Show Hand Debug View';
-  }
-});
-
-document.getElementById("btn-hand-calibrate")?.addEventListener("click", () => {
-  if (!isCameraRequested) {
-    alert('Please enable hand tracking first by clicking the hand button.');
-    return;
-  }
-  
-  // Get current landmarks for calibration
-  const snapshot = gestureEngine.read();
-  if (snapshot.hands === 0) {
-    alert('Please show your hand to the camera and try again.');
-    return;
-  }
-  
-  // Show calibration instruction
-  const instruction = document.createElement('div');
-  instruction.style.cssText = `
-    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    background: rgba(0,0,0,0.9); color: white; padding: 30px; border-radius: 10px;
-    text-align: center; z-index: 3000; max-width: 400px;
-  `;
-  instruction.innerHTML = `
-    <h3>🖐️ Calibrating Neutral Position</h3>
-    <p>Hold your hand in a comfortable, relaxed position.<br>
-    Palm facing camera, fingers naturally positioned.</p>
-    <p style="color: #4CAF50; font-size: 18px; margin: 20px 0;">
-    Calibrating in <span id="calibrate-countdown">3</span>...
-    </p>
-  `;
-  document.body.appendChild(instruction);
-  
-  let countdown = 3;
-  const countdownEl = document.getElementById('calibrate-countdown');
-  
-  const timer = setInterval(() => {
-    countdown--;
-    if (countdownEl) countdownEl.textContent = countdown.toString();
-    
-    if (countdown <= 0) {
-      clearInterval(timer);
-      
-      // Perform calibration
-      const currentSnapshot = gestureEngine.read();
-      if (currentSnapshot.hands > 0) {
-        // Get the actual raw landmarks from the hand tracker
-        const rawLandmarks = handTracker.getLatestLandmarks();
-        const success = gestureEngine.calibrateNeutral(rawLandmarks);
-        
-        if (success) {
-          instruction.innerHTML = `
-            <h3 style="color: #4CAF50;">✅ Calibration Complete!</h3>
-            <p>Your neutral hand position has been saved.<br>
-            Hand gestures are now personalized for you.</p>
-          `;
-        } else {
-          instruction.innerHTML = `
-            <h3 style="color: #f44336;">❌ Calibration Failed</h3>
-            <p>Unable to read hand landmarks. Please try again.</p>
-          `;
-        }
-        
-        setTimeout(() => {
-          document.body.removeChild(instruction);
-        }, 2000);
-        
-        console.log('Hand calibration completed');
-      } else {
-        instruction.innerHTML = `
-          <h3 style="color: #f44336;">❌ Calibration Failed</h3>
-          <p>No hand detected. Please try again.</p>
-        `;
-        
-        setTimeout(() => {
-          document.body.removeChild(instruction);
-        }, 2000);
-      }
-    }
-  }, 1000);
-});
-
-// Gesture mode button removed - now using finger gestures only
-
 // Solar system
 const [solarSystem, planetNames] = createSolarSystem(scene);
 
@@ -204,6 +66,35 @@ const changeFocus = (oldFocus: string, newFocus: string) => {
   solarSystem[newFocus].labels.showPOI();
   (document.querySelector(".caption p") as HTMLElement).innerHTML = newFocus;
 };
+
+const setFocus = (focus: string) => {
+  if (!solarSystem[focus]) {
+    console.warn(`[voice] Unknown focus target: ${focus}`);
+    return;
+  }
+  const previous = options.focus;
+  changeFocus(previous, focus);
+  options.focus = focus;
+  eventBus.emit("focusChanged", {
+    current: focus,
+    previous,
+  });
+};
+
+const focusPrevious = () => {
+  const index = planetNames.indexOf(options.focus);
+  const newIndex = index === 0 ? planetNames.length - 1 : index - 1;
+  setFocus(planetNames[newIndex]);
+};
+
+const focusNext = () => {
+  const index = (planetNames.indexOf(options.focus) + 1) % planetNames.length;
+  setFocus(planetNames[index]);
+};
+
+document.getElementById("btn-previous")?.addEventListener("click", focusPrevious);
+
+document.getElementById("btn-next")?.addEventListener("click", focusNext);
 
 // Camera
 const aspect = sizes.width / sizes.height;
@@ -224,6 +115,124 @@ controls.maxDistance = 50;
 const handTracker = new HandTrackerV2();
 const gestureEngine = new GestureEngine();
 const handControls = new HandGestureControlsV2(controls);
+
+// Hand tracking control buttons
+document.getElementById("btn-hand-toggle")?.addEventListener("click", async () => {
+  const currentState = handControls.getEnabled();
+
+  if (!currentState) {
+    if (!isCameraRequested) {
+      showCameraModal();
+    } else {
+      handControls.setEnabled(true);
+      updateHandStatus("Enabled", 0, "Show your hand to camera");
+      showHandHelp();
+      updateHandToggleButton(true);
+    }
+  } else {
+    handControls.setEnabled(false);
+    const statusDiv = document.getElementById("hand-status");
+    const helpDiv = document.getElementById("hand-help");
+    if (statusDiv) statusDiv.style.display = "none";
+    if (helpDiv) helpDiv.style.display = "none";
+    updateHandToggleButton(false);
+  }
+});
+
+function updateHandToggleButton(enabled: boolean) {
+  const button = document.getElementById("btn-hand-toggle");
+  if (button) {
+    button.style.backgroundColor = enabled ? "#4CAF50" : "";
+    button.title = enabled ? "Disable Hand Controls" : "Enable Hand Controls";
+  }
+}
+
+document.getElementById("btn-hand-debug")?.addEventListener("click", () => {
+  handTracker.toggleDebugView();
+  const button = document.getElementById("btn-hand-debug");
+  if (button) {
+    const isVisible = document.getElementById("hand-debug-canvas")?.style.display !== "none";
+    button.style.backgroundColor = isVisible ? "#2196F3" : "";
+    button.title = isVisible ? "Hide Hand Debug View" : "Show Hand Debug View";
+  }
+});
+
+document.getElementById("btn-hand-calibrate")?.addEventListener("click", () => {
+  if (!isCameraRequested) {
+    alert("Please enable hand tracking first by clicking the hand button.");
+    return;
+  }
+
+  const snapshot = gestureEngine.read();
+  if (snapshot.hands === 0) {
+    alert("Please show your hand to the camera and try again.");
+    return;
+  }
+
+  const instruction = document.createElement("div");
+  instruction.style.cssText = `
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.9); color: white; padding: 30px; border-radius: 10px;
+    text-align: center; z-index: 3000; max-width: 400px;
+  `;
+  instruction.innerHTML = `
+    <h3>🖐️ Calibrating Neutral Position</h3>
+    <p>Hold your hand in a comfortable, relaxed position.<br>
+    Palm facing camera, fingers naturally positioned.</p>
+    <p style="color: #4CAF50; font-size: 18px; margin: 20px 0;">
+    Calibrating in <span id="calibrate-countdown">3</span>...
+    </p>
+  `;
+  document.body.appendChild(instruction);
+
+  let countdown = 3;
+  const countdownEl = document.getElementById("calibrate-countdown");
+
+  const timer = setInterval(() => {
+    countdown--;
+    if (countdownEl) countdownEl.textContent = countdown.toString();
+
+    if (countdown <= 0) {
+      clearInterval(timer);
+
+      const currentSnapshot = gestureEngine.read();
+      if (currentSnapshot.hands > 0) {
+        const rawLandmarks = handTracker.getLatestLandmarks();
+        const success = gestureEngine.calibrateNeutral(rawLandmarks);
+
+        if (success) {
+          instruction.innerHTML = `
+            <h3 style="color: #4CAF50;">✅ Calibration Complete!</h3>
+            <p>Your neutral hand position has been saved.<br>
+            Hand gestures are now personalized for you.</p>
+          `;
+        } else {
+          instruction.innerHTML = `
+            <h3 style="color: #f44336;">❌ Calibration Failed</h3>
+            <p>Unable to read hand landmarks. Please try again.</p>
+          `;
+        }
+
+        setTimeout(() => {
+          document.body.removeChild(instruction);
+        }, 2000);
+
+        console.log("Hand calibration completed");
+      } else {
+        instruction.innerHTML = `
+          <h3 style="color: #f44336;">❌ Calibration Failed</h3>
+          <p>No hand detected. Please try again.</p>
+        `;
+
+        setTimeout(() => {
+          document.body.removeChild(instruction);
+        }, 2000);
+      }
+    }
+  }, 1000);
+});
+
+// Gesture mode button removed - now using finger gestures only
 
 // Initialize MediaPipe (without camera access yet)
 let isCameraRequested = false;
@@ -396,6 +405,46 @@ fakeCamera.layers.enable(LAYERS.POILabel);
 
 // GUI
 createGUI(ambientLight, solarSystem, clock, fakeCamera, handControls);
+
+const voiceNavigation = new VoiceNavigationController(planetNames);
+voiceNavigation.attachUI({
+  button: document.getElementById("btn-voice") as HTMLButtonElement | null,
+  status: document.getElementById("voice-status"),
+  transcript: document.getElementById("voice-transcript"),
+  container: document.getElementById("voice-feedback"),
+});
+
+new WelcomeNarrator(planetNames, options.narrationEnabled, options.focus);
+
+eventBus.on("voiceCommand", (intent) => {
+  switch (intent.type) {
+    case "open":
+      setFocus(intent.target);
+      break;
+    case "next":
+      focusNext();
+      break;
+    case "previous":
+      focusPrevious();
+      break;
+    case "repeat":
+      eventBus.emit("focusChanged", {
+        current: options.focus,
+        previous: options.focus,
+      });
+      break;
+    case "stop":
+      // Future: pause narration or other behaviours.
+      break;
+    default:
+      break;
+  }
+});
+
+eventBus.emit("focusChanged", {
+  current: options.focus,
+  previous: null,
+});
 
 (function tick() {
   const deltaTime = clock.getDelta();

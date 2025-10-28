@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build"
+    "build": "vite build",
+    "stt-proxy": "node server/stt-proxy.js",
+    "generate:tts": "node server/generate-welcome-tts.js"
   },
   "devDependencies": {
     "@types/three": "^0.154.0",

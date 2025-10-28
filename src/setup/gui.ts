@@ -1,6 +1,7 @@
 import * as dat from "lil-gui";
 import { SolarSystem } from "./solar-system";
 import { LAYERS } from "../constants";
+import { eventBus } from "../voice/eventBus";
 
 export const options = {
   showPaths: false,
@@ -10,6 +11,8 @@ export const options = {
   speed: 0.125,
   zangle: 0,
   yangle: 0,
+  voiceEnabled: false,
+  narrationEnabled: false,
 };
 
 export const createGUI = (
@@ -49,34 +52,54 @@ export const createGUI = (
   // Control the simulation speed
   gui.add(options, "speed", 0.1, 20, 0.1).name("Speed");
 
-  // Hand tracking controls (if available)
+  gui
+    .add(options, "voiceEnabled")
+    .name("Enable Voice")
+    .onChange((enabled: boolean) => {
+      eventBus.emit("voiceToggle", { enabled });
+    });
+
+  gui
+    .add(options, "narrationEnabled")
+    .name("Enable Narration")
+    .onChange((enabled: boolean) => {
+      eventBus.emit("narrationToggle", { enabled });
+    });
+
   if (handControls) {
     const handFolder = gui.addFolder("Hand Controls");
-    
-    handFolder.add({ enabled: true }, 'enabled')
-      .name('Enable Hand Gestures')
+
+    const handState = { enabled: true };
+    const sensitivity = { zoom: 10, rotation: 2, deadZone: 0.1 };
+
+    handFolder
+      .add(handState, "enabled")
+      .name("Enable Hand Gestures")
       .onChange((value: boolean) => {
         handControls.setEnabled(value);
       });
 
-    handFolder.add({ zoomSensitivity: 10 }, 'zoomSensitivity', 1, 30)
-      .name('Zoom Sensitivity')
+    handFolder
+      .add(sensitivity, "zoom", 1, 30)
+      .name("Zoom Sensitivity")
       .onChange((value: number) => {
         handControls.setSensitivity(value, undefined);
       });
 
-    handFolder.add({ rotationSensitivity: 2 }, 'rotationSensitivity', 0.5, 10)
-      .name('Rotation Sensitivity')
+    handFolder
+      .add(sensitivity, "rotation", 0.5, 10)
+      .name("Rotation Sensitivity")
       .onChange((value: number) => {
         handControls.setSensitivity(undefined, value);
       });
 
-    handFolder.add({ deadZone: 0.1 }, 'deadZone', 0, 0.5)
-      .name('Dead Zone')
+    handFolder
+      .add(sensitivity, "deadZone", 0, 0.5)
+      .name("Dead Zone")
       .onChange((value: number) => {
         handControls.setDeadZone(value);
       });
-      
+
     handFolder.close();
   }
 
