@@ -9,9 +9,9 @@ import { createLights } from "./setup/lights";
 import { createSolarSystem } from "./setup/solar-system";
 import { createGUI, options } from "./setup/gui";
 import { LAYERS } from "./constants";
-import { HandTracker } from "./hand-tracking/hand-tracker";
-import { GestureRecognizer } from "./hand-tracking/gesture-recognizer";
-import { HandGestureControls } from "./hand-tracking/hand-gesture-controls";
+import { HandTrackerV2 } from "./hand-tracking/hand-tracker";
+import { GestureEngine } from "./hand-tracking/gesture-engine";
+import { HandGestureControlsV2 } from "./hand-tracking/hand-gesture-controls-v2";
 
 THREE.ColorManagement.enabled = false;
 
@@ -110,6 +110,87 @@ document.getElementById("btn-hand-debug")?.addEventListener("click", () => {
   }
 });
 
+document.getElementById("btn-hand-calibrate")?.addEventListener("click", () => {
+  if (!isCameraRequested) {
+    alert('Please enable hand tracking first by clicking the hand button.');
+    return;
+  }
+  
+  // Get current landmarks for calibration
+  const snapshot = gestureEngine.read();
+  if (snapshot.hands === 0) {
+    alert('Please show your hand to the camera and try again.');
+    return;
+  }
+  
+  // Show calibration instruction
+  const instruction = document.createElement('div');
+  instruction.style.cssText = `
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.9); color: white; padding: 30px; border-radius: 10px;
+    text-align: center; z-index: 3000; max-width: 400px;
+  `;
+  instruction.innerHTML = `
+    <h3>🖐️ Calibrating Neutral Position</h3>
+    <p>Hold your hand in a comfortable, relaxed position.<br>
+    Palm facing camera, fingers naturally positioned.</p>
+    <p style="color: #4CAF50; font-size: 18px; margin: 20px 0;">
+    Calibrating in <span id="calibrate-countdown">3</span>...
+    </p>
+  `;
+  document.body.appendChild(instruction);
+  
+  let countdown = 3;
+  const countdownEl = document.getElementById('calibrate-countdown');
+  
+  const timer = setInterval(() => {
+    countdown--;
+    if (countdownEl) countdownEl.textContent = countdown.toString();
+    
+    if (countdown <= 0) {
+      clearInterval(timer);
+      
+      // Perform calibration
+      const currentSnapshot = gestureEngine.read();
+      if (currentSnapshot.hands > 0) {
+        // Get the actual raw landmarks from the hand tracker
+        const rawLandmarks = handTracker.getLatestLandmarks();
+        const success = gestureEngine.calibrateNeutral(rawLandmarks);
+        
+        if (success) {
+          instruction.innerHTML = `
+            <h3 style="color: #4CAF50;">✅ Calibration Complete!</h3>
+            <p>Your neutral hand position has been saved.<br>
+            Hand gestures are now personalized for you.</p>
+          `;
+        } else {
+          instruction.innerHTML = `
+            <h3 style="color: #f44336;">❌ Calibration Failed</h3>
+            <p>Unable to read hand landmarks. Please try again.</p>
+          `;
+        }
+        
+        setTimeout(() => {
+          document.body.removeChild(instruction);
+        }, 2000);
+        
+        console.log('Hand calibration completed');
+      } else {
+        instruction.innerHTML = `
+          <h3 style="color: #f44336;">❌ Calibration Failed</h3>
+          <p>No hand detected. Please try again.</p>
+        `;
+        
+        setTimeout(() => {
+          document.body.removeChild(instruction);
+        }, 2000);
+      }
+    }
+  }, 1000);
+});
+
+// Gesture mode button removed - now using finger gestures only
+
 // Solar system
 const [solarSystem, planetNames] = createSolarSystem(scene);
 
@@ -139,16 +220,16 @@ controls.enablePan = false;
 controls.minDistance = solarSystem["Sun"].getMinDistance();
 controls.maxDistance = 50;
 
-// Hand tracking system
-const handTracker = new HandTracker();
-const gestureRecognizer = new GestureRecognizer();
-const handControls = new HandGestureControls(fakeCamera, controls);
+// Hand tracking system v2 - Professional architecture
+const handTracker = new HandTrackerV2();
+const gestureEngine = new GestureEngine();
+const handControls = new HandGestureControlsV2(controls);
 
 // Initialize MediaPipe (without camera access yet)
 let isCameraRequested = false;
 
 handTracker.initialize().then(() => {
-  console.log('✋ MediaPipe initialized successfully');
+  console.log('✋ MediaPipe v2 initialized successfully');
   updateHandStatus('Ready', 0, 'Click hand button to enable');
 }).catch((error) => {
   console.warn('⚠️ MediaPipe initialization failed:', error.message);
@@ -208,12 +289,13 @@ async function requestCameraAccess() {
   }
 }
 
-handTracker.onResults((results) => {
-  const gesture = gestureRecognizer.recognizeGestures(results.landmarks);
-  handControls.update(gesture);
+// Process hand tracking results through the gesture engine
+handTracker.onResults((results, timestamp) => {
+  gestureEngine.ingest(results.landmarks, timestamp);
   
   // Update status display
-  updateHandStatus('Active', results.landmarks.length, getGestureDescription(gesture));
+  const snapshot = gestureEngine.read();
+  updateHandStatus('Active', results.landmarks.length, getGestureDescription(snapshot));
 });
 
 // Status and help functions
@@ -243,15 +325,24 @@ function updateHandStatus(cameraStatus: string, handCount: number, gestureStatus
   }
 }
 
-function getGestureDescription(gesture: any): string {
-  if (!gesture.isHandVisible) return 'No hands detected';
+function getGestureDescription(snapshot: any): string {
+  if (snapshot.hands === 0) return 'No hands detected';
   
-  const descriptions = [];
-  if (gesture.pinchStrength > 0.3) descriptions.push(`Pinch (${(gesture.pinchStrength * 100).toFixed(0)}%)`);
-  if (Math.abs(gesture.palmRotation) > 0.2) descriptions.push(`Rotate ${gesture.palmRotation > 0 ? 'Right' : 'Left'}`);
-  if (Math.abs(gesture.palmTilt) > 0.2) descriptions.push(`Tilt ${gesture.palmTilt > 0 ? 'Up' : 'Down'}`);
+  // Finger gesture system only
+  const fingerGesture = gestureEngine.getLastFingerGesture();
+  const gestureEmojis = {
+    'open_palm': '🖐️ Open Palm → Zoom Out',
+    'closed_fist': '✊ Closed Fist → Zoom In',
+    'one_finger': '☝️ One Finger → Rotate Left',
+    'two_fingers': '✌️ Two Fingers → Rotate Right',
+    'unknown': '❓ Show gesture to camera'
+  };
   
-  return descriptions.length > 0 ? descriptions.join(', ') : 'Hand visible';
+  const gestureText = gestureEmojis[fingerGesture.gesture] || '❓ Unknown';
+  const confidence = fingerGesture.confidence ? ` (${(fingerGesture.confidence * 100).toFixed(0)}%)` : '';
+  const fingerCount = fingerGesture.fingerCount >= 0 ? ` [${fingerGesture.fingerCount} fingers]` : '';
+  
+  return gestureText + confidence + fingerCount;
 }
 
 function showHandHelp(duration?: number) {
@@ -307,17 +398,22 @@ fakeCamera.layers.enable(LAYERS.POILabel);
 createGUI(ambientLight, solarSystem, clock, fakeCamera, handControls);
 
 (function tick() {
-  elapsedTime += clock.getDelta() * options.speed;
+  const deltaTime = clock.getDelta();
+  elapsedTime += deltaTime * options.speed;
 
   // Update the solar system objects
   for (const object of Object.values(solarSystem)) {
     object.tick(elapsedTime);
   }
 
+  // Apply hand gesture deltas to OrbitControls (v2 architecture)
+  const gestureSnapshot = gestureEngine.read();
+  handControls.apply(gestureSnapshot, deltaTime);
+
   // Update camera
   camera.copy(fakeCamera);
 
-  // Update controls
+  // Update controls (OrbitControls handles all the camera math)
   controls.update();
 
   // Update labels

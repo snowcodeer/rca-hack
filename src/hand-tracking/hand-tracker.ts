@@ -1,17 +1,31 @@
 import { HandLandmarker, FilesetResolver, DrawingUtils } from '@mediapipe/tasks-vision';
 import { HandData } from './gesture-types';
 
-export class HandTracker {
+export class HandTrackerV2 {
   private handLandmarker: HandLandmarker | null = null;
   private video: HTMLVideoElement;
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private isInitialized = false;
-  private onResultsCallback?: (results: HandData) => void;
+  private isTrackingActive = false;
+  private onResultsCallback?: (results: HandData, timestamp: number) => void;
+  
+  // Frame synchronization
+  private supportsRVFC: boolean = false;
+  
+  // Store latest raw landmarks for calibration access
+  private latestLandmarks: any[][] = [];
 
   constructor() {
     this.setupVideo();
     this.setupCanvas();
+    this.checkRVFCSupport();
+  }
+
+  private checkRVFCSupport(): void {
+    // Check if requestVideoFrameCallback is supported
+    this.supportsRVFC = typeof HTMLVideoElement.prototype.requestVideoFrameCallback === 'function';
+    console.log('rVFC support:', this.supportsRVFC ? 'available' : 'fallback to RAF');
   }
 
   async initialize(): Promise<void> {
@@ -48,6 +62,7 @@ export class HandTracker {
     
     try {
       await this.startVideoStream();
+      this.startTracking(); // Start tracking immediately after camera access
       console.log('Camera access granted and tracking started');
     } catch (error) {
       console.error('Camera access failed:', error);
@@ -102,7 +117,6 @@ export class HandTracker {
         this.video.addEventListener('loadedmetadata', () => {
           this.video.play().then(() => {
             console.log('Video stream started successfully');
-            this.processVideoFrame();
             resolve();
           }).catch(reject);
         });
@@ -135,19 +149,53 @@ export class HandTracker {
     }
   }
 
-  private processVideoFrame(): void {
-    if (!this.isInitialized || !this.handLandmarker) return;
+  /**
+   * Start hand tracking with optimal frame synchronization
+   */
+  startTracking(): void {
+    if (!this.isInitialized || this.isTrackingActive) return;
+    
+    this.isTrackingActive = true;
+    
+    if (this.supportsRVFC) {
+      // Use requestVideoFrameCallback for perfect sync
+      this.processVideoFrameRVFC();
+    } else {
+      // Fallback to requestAnimationFrame
+      this.processVideoFrameRAF();
+    }
+    
+    console.log('Hand tracking started with', this.supportsRVFC ? 'rVFC' : 'RAF');
+  }
 
+  /**
+   * Stop hand tracking
+   */
+  stopTracking(): void {
+    this.isTrackingActive = false;
+  }
+
+  /**
+   * Process video frames using requestVideoFrameCallback (optimal)
+   */
+  private processVideoFrameRVFC(): void {
+    if (!this.isTrackingActive || !this.isInitialized || !this.handLandmarker) return;
+
+    // Use video.currentTime for precise timestamp
+    const timestampMs = this.video.currentTime * 1000;
+    
     try {
-      const startTimeMs = performance.now();
-      const results = this.handLandmarker.detectForVideo(this.video, startTimeMs);
+      const results = this.handLandmarker.detectForVideo(this.video, timestampMs);
+
+      // Store latest landmarks for calibration access
+      this.latestLandmarks = results.landmarks;
 
       if (this.onResultsCallback) {
         this.onResultsCallback({
           landmarks: results.landmarks,
           worldLandmarks: results.worldLandmarks,
           handedness: results.handedness
-        });
+        }, timestampMs);
       }
 
       // Draw debug visualization if enabled
@@ -158,15 +206,66 @@ export class HandTracker {
       });
 
     } catch (error) {
-      console.error('Error processing video frame:', error);
+      console.error('Error processing video frame (rVFC):', error);
     }
 
-    // Continue processing at ~30fps
-    setTimeout(() => this.processVideoFrame(), 33);
+    // Schedule next frame
+    if (this.isTrackingActive && this.video.requestVideoFrameCallback) {
+      this.video.requestVideoFrameCallback(() => this.processVideoFrameRVFC());
+    }
   }
 
-  onResults(callback: (results: HandData) => void): void {
+  /**
+   * Process video frames using requestAnimationFrame (fallback)
+   */
+  private processVideoFrameRAF(): void {
+    if (!this.isTrackingActive || !this.isInitialized || !this.handLandmarker) return;
+
+    // Use performance.now() as fallback timestamp
+    const timestampMs = performance.now();
+    
+    try {
+      const results = this.handLandmarker.detectForVideo(this.video, timestampMs);
+
+      // Store latest landmarks for calibration access
+      this.latestLandmarks = results.landmarks;
+
+      if (this.onResultsCallback) {
+        this.onResultsCallback({
+          landmarks: results.landmarks,
+          worldLandmarks: results.worldLandmarks,
+          handedness: results.handedness
+        }, timestampMs);
+      }
+
+      // Draw debug visualization if enabled
+      this.drawDebugLandmarks({
+        landmarks: results.landmarks,
+        worldLandmarks: results.worldLandmarks,
+        handedness: results.handedness
+      });
+
+    } catch (error) {
+      console.error('Error processing video frame (RAF):', error);
+    }
+
+    // Schedule next frame at ~30fps
+    if (this.isTrackingActive) {
+      setTimeout(() => {
+        requestAnimationFrame(() => this.processVideoFrameRAF());
+      }, 33);
+    }
+  }
+
+  onResults(callback: (results: HandData, timestamp: number) => void): void {
     this.onResultsCallback = callback;
+  }
+
+  /**
+   * Get the latest raw landmarks for calibration purposes
+   */
+  getLatestLandmarks(): any[][] {
+    return this.latestLandmarks;
   }
 
   toggleDebugView(): void {

@@ -1,5 +1,5 @@
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import { GestureState } from './gesture-types';
+import { GestureState, FingerGestureState } from './gesture-types';
 import * as THREE from 'three';
 
 export class HandGestureControls {
@@ -7,15 +7,15 @@ export class HandGestureControls {
   private orbitControls: OrbitControls;
   private isEnabled = true;
   
-  // Gesture control parameters
-  private zoomSensitivity = 10;
-  private rotationSensitivity = 2;
-  private deadZone = 0.1; // Ignore small movements
-
-  // Internal state for smooth control
-  private targetRotation = { x: 0, y: 0 };
-  private currentRotation = { x: 0, y: 0 };
-  private rotationSmoothness = 0.1;
+  // Finger gesture control parameters
+  private zoomSensitivity = 2.5;      // Smooth zoom speed
+  private rotationSensitivity = 1.2;  // Good rotation speed
+  
+  // Gesture timing and smoothing
+  private gestureStartTime = 0;
+  private minGestureDuration = 100; // ms - prevent accidental gestures
+  private currentGesture: string = 'unknown';
+  private gestureConfidenceThreshold = 0.7;
 
   constructor(camera: THREE.Camera, orbitControls: OrbitControls) {
     this.camera = camera;
@@ -27,25 +27,80 @@ export class HandGestureControls {
       return;
     }
 
-    this.handleZoom(gesture.pinchStrength);
-    this.handleRotation(gesture.palmRotation, gesture.palmTilt);
+    // Only move camera if hand is actually moving
+    if (gesture.isMoving) {
+      this.handleZoom(gesture.pinchStrength);
+      this.handleRotation(gesture.palmRotation, gesture.palmTilt);
+    }
+  }
+
+  /**
+   * Update camera controls based on finger gestures
+   */
+  updateWithFingerGestures(fingerGesture: FingerGestureState): void {
+    if (!this.isEnabled || !fingerGesture.isHandVisible) {
+      this.currentGesture = 'unknown';
+      return;
+    }
+
+    // Only act on high-confidence gestures
+    if (fingerGesture.confidence < this.gestureConfidenceThreshold) {
+      return;
+    }
+
+    const now = performance.now();
+    
+    // Check if gesture changed
+    if (this.currentGesture !== fingerGesture.gesture) {
+      this.currentGesture = fingerGesture.gesture;
+      this.gestureStartTime = now;
+      return; // Wait for gesture to stabilize
+    }
+
+    // Ensure gesture has been stable for minimum duration
+    if (now - this.gestureStartTime < this.minGestureDuration) {
+      return;
+    }
+
+    // Execute gesture-based controls
+    switch (fingerGesture.gesture) {
+      case 'open_palm':
+        this.executeZoomOut();
+        break;
+      case 'closed_fist':
+        this.executeZoomIn();
+        break;
+      case 'one_finger':
+        this.executeRotateLeft();
+        break;
+      case 'two_fingers':
+        this.executeRotateRight();
+        break;
+    }
   }
 
   private handleZoom(pinchStrength: number): void {
-    if (pinchStrength < this.deadZone) return;
-
-    // Map pinch strength to zoom speed
-    // Higher pinch strength = zoom in faster
-    const zoomDirection = pinchStrength > 0.5 ? -1 : 1; // Pinch = zoom in
-    const zoomSpeed = Math.abs(pinchStrength - 0.5) * 2; // 0-1 range
+    // Apply smoothing to zoom input
+    const smoothedPinch = this.previousZoomInput * this.controlSmoothingFactor + 
+                         pinchStrength * (1 - this.controlSmoothingFactor);
+    this.previousZoomInput = smoothedPinch;
     
-    const zoomDelta = zoomDirection * zoomSpeed * this.zoomSensitivity * 0.1;
+    // Clear dead zone - no zoom if below threshold
+    if (smoothedPinch < 0.4) return;
+
+    // Intuitive zoom: higher pinch strength = zoom in
+    // Map 0.4-1.0 pinch range to zoom speed
+    const normalizedPinch = (smoothedPinch - 0.4) / 0.6; // 0-1 range
+    const zoomSpeed = normalizedPinch * normalizedPinch; // Quadratic for better control
+    
+    // Zoom in when pinching (negative delta = move camera closer)
+    const zoomDelta = -zoomSpeed * this.zoomSensitivity * 0.02;
     
     // Get current distance from target
     const currentDistance = this.camera.position.distanceTo(this.orbitControls.target);
     const newDistance = Math.max(
-      this.orbitControls.minDistance,
-      Math.min(this.orbitControls.maxDistance, currentDistance + zoomDelta)
+      this.orbitControls.minDistance || 0.1,
+      Math.min(this.orbitControls.maxDistance || 100, currentDistance + zoomDelta)
     );
 
     // Apply zoom by scaling camera position relative to target
@@ -56,32 +111,39 @@ export class HandGestureControls {
     this.camera.position.copy(
       this.orbitControls.target.clone().add(direction.multiplyScalar(newDistance))
     );
+    
+    // Update orbit controls
+    this.orbitControls.update();
   }
 
   private handleRotation(palmRotation: number, palmTilt: number): void {
     // Apply dead zone
-    const rotationX = Math.abs(palmRotation) > this.deadZone ? palmRotation : 0;
-    const rotationY = Math.abs(palmTilt) > this.deadZone ? palmTilt : 0;
+    const rawRotationX = Math.abs(palmRotation) > this.deadZone ? palmRotation : 0;
+    const rawRotationY = Math.abs(palmTilt) > this.deadZone ? palmTilt : 0;
 
-    if (rotationX === 0 && rotationY === 0) {
-      return;
-    }
+    // Apply smoothing to rotation inputs
+    const rotationX = this.previousRotationX * this.controlSmoothingFactor + 
+                     rawRotationX * (1 - this.controlSmoothingFactor);
+    const rotationY = this.previousRotationY * this.controlSmoothingFactor + 
+                     rawRotationY * (1 - this.controlSmoothingFactor);
+    
+    this.previousRotationX = rotationX;
+    this.previousRotationY = rotationY;
 
-    // Update target rotation
-    this.targetRotation.x += rotationX * this.rotationSensitivity * 0.02;
-    this.targetRotation.y += rotationY * this.rotationSensitivity * 0.02;
+    if (Math.abs(rotationX) < 0.05 && Math.abs(rotationY) < 0.05) return;
 
-    // Smooth interpolation to target rotation
-    this.currentRotation.x += (this.targetRotation.x - this.currentRotation.x) * this.rotationSmoothness;
-    this.currentRotation.y += (this.targetRotation.y - this.currentRotation.y) * this.rotationSmoothness;
-
+    // Improved rotation speed with exponential curve for better control
+    const rotationSpeed = this.rotationSensitivity * 0.02;
+    
     // Get current spherical coordinates relative to target
     const offset = new THREE.Vector3().subVectors(this.camera.position, this.orbitControls.target);
     const spherical = new THREE.Spherical().setFromVector3(offset);
 
-    // Apply rotation
-    spherical.theta += this.currentRotation.x;
-    spherical.phi += this.currentRotation.y;
+    // Apply rotation with proper direction mapping
+    // Negative rotationX for intuitive left/right movement
+    spherical.theta -= rotationX * rotationSpeed;
+    // Positive rotationY for intuitive up/down movement  
+    spherical.phi += rotationY * rotationSpeed;
 
     // Clamp phi to prevent camera flipping
     spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi));
@@ -90,10 +152,9 @@ export class HandGestureControls {
     const newPosition = new THREE.Vector3().setFromSpherical(spherical);
     this.camera.position.copy(this.orbitControls.target.clone().add(newPosition));
     this.camera.lookAt(this.orbitControls.target);
-
-    // Decay the rotation for smooth stopping
-    this.targetRotation.x *= 0.95;
-    this.targetRotation.y *= 0.95;
+    
+    // Update orbit controls
+    this.orbitControls.update();
   }
 
   setEnabled(enabled: boolean): void {
@@ -105,15 +166,94 @@ export class HandGestureControls {
     return this.isEnabled;
   }
 
+  /**
+   * Execute zoom out (open palm)
+   */
+  private executeZoomOut(): void {
+    const currentDistance = this.camera.position.distanceTo(this.orbitControls.target);
+    const zoomOutDelta = this.zoomSensitivity * 0.05;
+    const newDistance = Math.min(
+      this.orbitControls.maxDistance || 100,
+      currentDistance + zoomOutDelta
+    );
+
+    this.updateCameraDistance(newDistance);
+  }
+
+  /**
+   * Execute zoom in (closed fist)
+   */
+  private executeZoomIn(): void {
+    const currentDistance = this.camera.position.distanceTo(this.orbitControls.target);
+    const zoomInDelta = this.zoomSensitivity * 0.05;
+    const newDistance = Math.max(
+      this.orbitControls.minDistance || 0.1,
+      currentDistance - zoomInDelta
+    );
+
+    this.updateCameraDistance(newDistance);
+  }
+
+  /**
+   * Execute rotate left (one finger)
+   */
+  private executeRotateLeft(): void {
+    const rotationSpeed = this.rotationSensitivity * 0.03;
+    this.rotateCamera(-rotationSpeed, 0);
+  }
+
+  /**
+   * Execute rotate right (two fingers)
+   */
+  private executeRotateRight(): void {
+    const rotationSpeed = this.rotationSensitivity * 0.03;
+    this.rotateCamera(rotationSpeed, 0);
+  }
+
+  /**
+   * Update camera distance from target
+   */
+  private updateCameraDistance(newDistance: number): void {
+    const direction = new THREE.Vector3()
+      .subVectors(this.camera.position, this.orbitControls.target)
+      .normalize();
+    
+    this.camera.position.copy(
+      this.orbitControls.target.clone().add(direction.multiplyScalar(newDistance))
+    );
+    
+    this.orbitControls.update();
+  }
+
+  /**
+   * Rotate camera around target
+   */
+  private rotateCamera(deltaTheta: number, deltaPhi: number): void {
+    const offset = new THREE.Vector3().subVectors(this.camera.position, this.orbitControls.target);
+    const spherical = new THREE.Spherical().setFromVector3(offset);
+
+    spherical.theta += deltaTheta;
+    spherical.phi += deltaPhi;
+
+    // Clamp phi to prevent camera flipping
+    spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi));
+
+    const newPosition = new THREE.Vector3().setFromSpherical(spherical);
+    this.camera.position.copy(this.orbitControls.target.clone().add(newPosition));
+    this.camera.lookAt(this.orbitControls.target);
+    
+    this.orbitControls.update();
+  }
+
   setSensitivity(zoom?: number, rotation?: number): void {
     if (zoom !== undefined) this.zoomSensitivity = zoom;
     if (rotation !== undefined) this.rotationSensitivity = rotation;
     console.log(`Hand control sensitivity - Zoom: ${this.zoomSensitivity}, Rotation: ${this.rotationSensitivity}`);
   }
 
-  setDeadZone(deadZone: number): void {
-    this.deadZone = Math.max(0, Math.min(1, deadZone));
-    console.log(`Hand control dead zone: ${this.deadZone}`);
+  setConfidenceThreshold(threshold: number): void {
+    this.gestureConfidenceThreshold = Math.max(0, Math.min(1, threshold));
+    console.log(`Gesture confidence threshold: ${this.gestureConfidenceThreshold}`);
   }
 
   // Debug method to get current control state
@@ -122,9 +262,8 @@ export class HandGestureControls {
       enabled: this.isEnabled,
       zoomSensitivity: this.zoomSensitivity,
       rotationSensitivity: this.rotationSensitivity,
-      deadZone: this.deadZone,
-      currentRotation: { ...this.currentRotation },
-      targetRotation: { ...this.targetRotation },
+      currentGesture: this.currentGesture,
+      gestureConfidenceThreshold: this.gestureConfidenceThreshold,
       cameraDistance: this.camera.position.distanceTo(this.orbitControls.target)
     };
   }
