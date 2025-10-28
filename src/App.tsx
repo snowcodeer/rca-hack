@@ -17,6 +17,21 @@ function App() {
   }
 
   useEffect(() => {
+    // Hide hand tracking and voice UI elements on landing page
+    const handStatus = document.getElementById('hand-status');
+    const handHelp = document.getElementById('hand-help');
+    const voiceFeedback = document.getElementById('voice-feedback');
+    
+    if (handStatus) {
+      (handStatus as HTMLElement).style.display = 'none';
+    }
+    if (handHelp) {
+      (handHelp as HTMLElement).style.display = 'none';
+    }
+    if (voiceFeedback) {
+      voiceFeedback.setAttribute('hidden', 'true');
+    }
+    
     // Enable clicking after tagline appears (1.25s + 2s fade = 3.25s)
     const timer = setTimeout(() => {
       setIsAnimationComplete(true)
@@ -39,43 +54,84 @@ function App() {
       const caption = document.querySelector('.caption')
       
       if (canvas) {
-        canvas.style.display = 'block'
-        canvas.style.position = 'fixed'
-        canvas.style.top = '0'
-        canvas.style.left = '0'
-        canvas.style.outline = 'none'
-        canvas.style.opacity = '0'
-        canvas.style.transition = 'opacity 1s ease-in-out'
+        (canvas as HTMLElement).style.display = 'block'
+        ;(canvas as HTMLElement).style.position = 'fixed'
+        ;(canvas as HTMLElement).style.top = '0'
+        ;(canvas as HTMLElement).style.left = '0'
+        ;(canvas as HTMLElement).style.outline = 'none'
+        ;(canvas as HTMLElement).style.opacity = '0'
+        ;(canvas as HTMLElement).style.transition = 'opacity 1s ease-in-out'
         // Trigger fade-in after a brief delay
         setTimeout(() => {
-          canvas.style.opacity = '1'
+          ;(canvas as HTMLElement).style.opacity = '1'
         }, 100)
       }
       if (btnGroup) {
-        btnGroup.style.display = 'flex'
-        btnGroup.style.opacity = '0'
-        btnGroup.style.transition = 'opacity 1s ease-in-out'
+        ;(btnGroup as HTMLElement).style.display = 'flex'
+        ;(btnGroup as HTMLElement).style.opacity = '0'
+        ;(btnGroup as HTMLElement).style.transition = 'opacity 1s ease-in-out'
         setTimeout(() => {
-          btnGroup.style.opacity = '1'
+          ;(btnGroup as HTMLElement).style.opacity = '1'
         }, 200)
       }
       if (caption) {
-        caption.style.display = 'flex'
-        caption.style.position = 'fixed'
-        caption.style.bottom = '20px'
-        caption.style.left = '50%'
-        caption.style.transform = 'translateX(-50%)'
-        caption.style.zIndex = '100'
-        caption.style.opacity = '0'
-        caption.style.transition = 'opacity 1s ease-in-out'
+        ;(caption as HTMLElement).style.display = 'flex'
+        ;(caption as HTMLElement).style.position = 'fixed'
+        ;(caption as HTMLElement).style.bottom = '20px'
+        ;(caption as HTMLElement).style.left = '50%'
+        ;(caption as HTMLElement).style.transform = 'translateX(-50%)'
+        ;(caption as HTMLElement).style.zIndex = '100'
+        ;(caption as HTMLElement).style.opacity = '0'
+        ;(caption as HTMLElement).style.transition = 'opacity 1s ease-in-out'
         setTimeout(() => {
-          caption.style.opacity = '1'
+          ;(caption as HTMLElement).style.opacity = '1'
         }, 300)
+      }
+      
+      // Hide all tooltips before loading the solar system
+      const allTooltips = [
+        'space-tooltip', 'mercury-tooltip', 'venus-tooltip', 'earth-tooltip', 'moon-tooltip',
+        'mars-tooltip', 'jupiter-tooltip', 'saturn-tooltip', 'uranus-tooltip', 'neptune-tooltip',
+        'ganymede-tooltip', 'titan-tooltip', 'callisto-tooltip', 'io-tooltip', 'europa-tooltip', 'triton-tooltip'
+      ];
+      
+      allTooltips.forEach(tooltipId => {
+        const tooltip = document.getElementById(tooltipId);
+        if (tooltip) {
+          tooltip.classList.remove('show');
+          tooltip.style.display = 'none';
+        }
+      });
+      
+      // Hide hand tracking and voice UI elements
+      const handStatus = document.getElementById('hand-status');
+      const handHelp = document.getElementById('hand-help');
+      const voiceFeedback = document.getElementById('voice-feedback');
+      
+      if (handStatus) {
+        (handStatus as HTMLElement).style.display = 'none';
+      }
+      if (handHelp) {
+        (handHelp as HTMLElement).style.display = 'none';
+      }
+      if (voiceFeedback) {
+        voiceFeedback.setAttribute('hidden', 'true');
       }
       
       // Load the original solar system script
       import('./script').then(() => {
         console.log('Solar system script loaded successfully')
+        
+        // Show sun tooltip after solar system is loaded
+        setTimeout(() => {
+          const sunTooltip = document.getElementById('space-tooltip');
+          if (sunTooltip) {
+            sunTooltip.style.display = 'block';
+            setTimeout(() => {
+              sunTooltip.classList.add('show');
+            }, 100);
+          }
+        }, 500);
       }).catch((error) => {
         console.error('Failed to load solar system script:', error)
       })

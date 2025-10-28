@@ -129,17 +129,6 @@ const camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 1000);
 camera.position.set(0, 20, 0);
 solarSystem["Sun"].mesh.add(camera);
 
-// Show tooltip for Sun on initial load
-setTimeout(() => {
-  const sunTooltip = document.getElementById('space-tooltip');
-  if (sunTooltip && options.focus === 'Sun') {
-    sunTooltip.style.display = 'block';
-    setTimeout(() => {
-      sunTooltip.classList.add('show');
-    }, 100);
-  }
-}, 1000); // Wait for solar system to fully load
-
 // Controls
 const fakeCamera = camera.clone();
 const controls = new OrbitControls(fakeCamera, canvas);
