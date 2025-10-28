@@ -117,6 +117,14 @@ const server = createServer(async (request, response) => {
     return;
   }
 
+  await handleTranscription(request, response);
+});
+
+server.listen(PORT, () => {
+  console.log(`[stt-proxy] Listening on http://localhost:${PORT}${ROUTE}`);
+});
+
+async function handleTranscription(request, response) {
   let payload;
   try {
     const rawBody = await readBody(request);
@@ -227,11 +235,7 @@ const server = createServer(async (request, response) => {
       detail: error?.message ?? String(error),
     });
   }
-});
-
-server.listen(PORT, () => {
-  console.log(`[stt-proxy] Listening on http://localhost:${PORT}${ROUTE}`);
-});
+}
 
 // ----------------------
 // Intent Classification

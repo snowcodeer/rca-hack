@@ -11,6 +11,7 @@ import { createGUI, options } from "./setup/gui";
 import { LAYERS } from "./constants";
 import { eventBus } from "./voice/eventBus";
 import { VoiceNavigationController } from "./voice/navigation";
+import { WelcomeNarrator } from "./voice/welcomeNarrator";
 
 THREE.ColorManagement.enabled = false;
 
@@ -154,6 +155,8 @@ voiceNavigation.attachUI({
   transcript: document.getElementById("voice-transcript"),
   container: document.getElementById("voice-feedback"),
 });
+
+new WelcomeNarrator(planetNames, options.narrationEnabled, options.focus);
 
 eventBus.on("voiceCommand", (intent) => {
   switch (intent.type) {
