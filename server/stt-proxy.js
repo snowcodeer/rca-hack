@@ -2,7 +2,12 @@ import { createServer } from "node:http";
 
 const PORT = Number(process.env.STT_PROXY_PORT ?? 4000);
 const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY || "";
-const TARGET_URL = "https://api.elevenlabs.io/v1/speech-to-text/convert";
+const ENDPOINTS = [
+  "https://api.elevenlabs.io/v1/speech-to-text/convert",
+  // Fallbacks in case of routing changes
+  "https://api.elevenlabs.io/v1/speech-to-text",
+  "https://api.elevenlabs.io/v1/speech-to-text/transcriptions",
+];
 const ROUTE = "/api/stt/transcriptions";
 
 const baseHeaders = {
@@ -31,35 +36,60 @@ const extractTranscript = (payload) => {
   if (!payload) {
     return null;
   }
-  if (typeof payload.transcript === "string") {
+  if (typeof payload.transcript === "string" && payload.transcript.trim()) {
     return payload.transcript;
   }
-  if (Array.isArray(payload.chunks)) {
+  if (typeof payload.text === "string" && payload.text.trim()) {
+    return payload.text;
+  }
+  if (Array.isArray(payload.words) && payload.words.length > 0) {
+    return payload.words.map((word) => word.text ?? "").join(" ").trim() || null;
+  }
+  if (Array.isArray(payload.chunks) && payload.chunks.length > 0) {
     return payload.chunks.map((chunk) => chunk.text ?? "").join(" ").trim() || null;
   }
-  if (Array.isArray(payload.transcripts)) {
+  if (Array.isArray(payload.segments) && payload.segments.length > 0) {
+    return payload.segments.map((segment) => segment.text ?? "").join(" ").trim() || null;
+  }
+  if (Array.isArray(payload.transcripts) && payload.transcripts.length > 0) {
     return payload.transcripts
       .map((item) => extractTranscript(item))
       .filter(Boolean)
       .join(" ")
       .trim() || null;
   }
-  if (typeof payload.text === "string") {
-    return payload.text;
-  }
   return null;
 };
 
 const pickChunks = (payload) => {
-  if (!payload || !Array.isArray(payload.chunks)) {
+  if (!payload) {
     return undefined;
   }
-  return payload.chunks.map((chunk) => ({
-    text: chunk.text ?? "",
-    start: chunk.start ?? null,
-    end: chunk.end ?? null,
-    speaker: chunk.speaker ?? null,
-  }));
+  if (Array.isArray(payload.chunks)) {
+    return payload.chunks.map((chunk) => ({
+      text: chunk.text ?? "",
+      start: chunk.start ?? null,
+      end: chunk.end ?? null,
+      speaker: chunk.speaker ?? null,
+    }));
+  }
+  if (Array.isArray(payload.words)) {
+    return payload.words.map((word) => ({
+      text: word.text ?? "",
+      start: word.start ?? word.offset ?? null,
+      end: word.end ?? null,
+      speaker: word.speaker ?? null,
+    }));
+  }
+  if (Array.isArray(payload.segments)) {
+    return payload.segments.map((segment) => ({
+      text: segment.text ?? "",
+      start: segment.start ?? null,
+      end: segment.end ?? null,
+      speaker: segment.speaker ?? null,
+    }));
+  }
+  return undefined;
 };
 
 const respond = (response, statusCode, body) => {
@@ -96,7 +126,7 @@ const server = createServer(async (request, response) => {
     return;
   }
 
-  const { audioBase64, mimeType = "audio/webm", languageCode, modelId, diarize, numSpeakers, timestampsGranularity, tagAudioEvents } =
+  const { audioBase64, mimeType = "audio/webm", languageCode, modelId, diarize, numSpeakers, timestampsGranularity, tagAudioEvents, candidates = [], classify = false } =
     payload || {};
 
   if (!audioBase64) {
@@ -135,21 +165,41 @@ const server = createServer(async (request, response) => {
   }
 
   try {
-    const upstream = await fetch(TARGET_URL, {
-      method: "POST",
-      headers: {
-        "xi-api-key": ELEVENLABS_API_KEY,
-      },
-      body: formData,
-    });
+    let result;
+    let ok = false;
+    let lastStatus = 0;
+    let lastBody = null;
+    for (const url of ENDPOINTS) {
+      const upstream = await fetch(url, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "xi-api-key": ELEVENLABS_API_KEY,
+        },
+        body: formData,
+      });
+      lastStatus = upstream.status;
+      try {
+        result = await upstream.json();
+      } catch {
+        result = null;
+      }
+      lastBody = result;
+      if (upstream.ok) {
+        ok = true;
+        break;
+      }
+      if (upstream.status !== 404) {
+        break;
+      }
+    }
 
-    const result = await upstream.json();
-
-    if (!upstream.ok) {
-      respond(response, upstream.status, {
+    if (!ok) {
+      console.error("[stt-proxy] ElevenLabs error", lastStatus, lastBody);
+      respond(response, lastStatus || 502, {
         error: "Upstream ElevenLabs request failed",
-        status: upstream.status,
-        detail: result,
+        status: lastStatus,
+        detail: lastBody,
       });
       return;
     }
@@ -157,13 +207,21 @@ const server = createServer(async (request, response) => {
     const transcript = extractTranscript(result);
     const chunks = pickChunks(result);
 
+    // Optional server-side intent classification
+    const intent = classify ? classifyIntent(transcript, candidates) : null;
+
     respond(response, 200, {
       transcript,
       chunks,
-      language: result.language ?? languageCode ?? null,
+      text: result.text ?? null,
+      words: Array.isArray(result.words) ? result.words : undefined,
+      segments: Array.isArray(result.segments) ? result.segments : undefined,
+      language: result.language ?? result.language_code ?? languageCode ?? null,
       requestId: result.request_id ?? result.id ?? null,
+      intent,
     });
   } catch (error) {
+    console.error("[stt-proxy] request failure", error);
     respond(response, 502, {
       error: "Failed to contact ElevenLabs",
       detail: error?.message ?? String(error),
@@ -174,3 +232,69 @@ const server = createServer(async (request, response) => {
 server.listen(PORT, () => {
   console.log(`[stt-proxy] Listening on http://localhost:${PORT}${ROUTE}`);
 });
+
+// ----------------------
+// Intent Classification
+// ----------------------
+const COMMAND_SYNONYMS = {
+  open: ["open", "go to", "goto", "show", "focus on", "focus"],
+  next: ["next", "next planet", "forward"],
+  previous: ["previous", "prev", "back", "backwards"],
+  repeat: ["repeat", "again"],
+  stop: ["stop", "cancel", "pause"],
+};
+
+function classifyIntent(transcript, candidates) {
+  if (!transcript || typeof transcript !== "string") return null;
+  const normalized = transcript.toLowerCase();
+  const simple = (phrases) => phrases.some((p) => normalized.includes(p));
+  if (simple(COMMAND_SYNONYMS.next)) return { type: "next", transcript, normalized };
+  if (simple(COMMAND_SYNONYMS.previous)) return { type: "previous", transcript, normalized };
+  if (simple(COMMAND_SYNONYMS.repeat)) return { type: "repeat", transcript, normalized };
+  if (simple(COMMAND_SYNONYMS.stop)) return { type: "stop", transcript, normalized };
+
+  const m = normalized.match(/(?:open|go to|goto|show|focus on|focus)\s+(.+)/);
+  let targetCandidate = m && m[1] ? m[1] : normalized;
+  targetCandidate = targetCandidate.replace(/[.?!,]/g, " ").trim();
+  const target = resolveCandidate(targetCandidate, candidates || []);
+  if (target && target.score >= 0.45) {
+    return { type: "open", target: target.name, confidence: target.score, transcript, normalized };
+  }
+  return null;
+}
+
+function resolveCandidate(raw, candidates) {
+  if (!raw || !Array.isArray(candidates)) return null;
+  const cand = raw.toLowerCase();
+  let best = null;
+  for (const name of candidates) {
+    const score = similarity(name.toLowerCase(), cand);
+    if (!best || score > best.score) best = { name, score };
+  }
+  return best;
+}
+
+function similarity(a, b) {
+  if (a === b) return 1;
+  if (a.includes(b) || b.includes(a)) return 0.85;
+  return levenshteinSimilarity(a, b);
+}
+
+function levenshteinSimilarity(a, b) {
+  const distance = levenshtein(a, b);
+  const maxLen = Math.max(a.length, b.length) || 1;
+  return 1 - distance / maxLen;
+}
+
+function levenshtein(a, b) {
+  const matrix = Array.from({ length: a.length + 1 }, () => new Array(b.length + 1).fill(0));
+  for (let i = 0; i <= a.length; i++) matrix[i][0] = i;
+  for (let j = 0; j <= b.length; j++) matrix[0][j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      matrix[i][j] = Math.min(matrix[i - 1][j] + 1, matrix[i][j - 1] + 1, matrix[i - 1][j - 1] + cost);
+    }
+  }
+  return matrix[a.length][b.length];
+}

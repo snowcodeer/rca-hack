@@ -7,9 +7,20 @@ type VoiceUIBindings = {
   container?: HTMLElement | null;
 };
 
+type TranscriptChunk = {
+  text?: string;
+  start?: number | null;
+  end?: number | null;
+  speaker?: string | number | null;
+};
+
 type TranscriptResponse = {
   transcript?: string | null;
-  chunks?: Array<{ text?: string }>;
+  text?: string | null;
+  chunks?: TranscriptChunk[];
+  words?: TranscriptChunk[];
+  segments?: TranscriptChunk[];
+  language?: string | null;
 };
 
 const DEFAULT_LANGUAGE = "en";
@@ -32,6 +43,8 @@ export class VoiceNavigationController {
   private chunks: Blob[] = [];
   private ui: VoiceUIBindings = {};
   private readonly aliases: Map<string, string[]> = new Map();
+  private stopTimer: number | null = null;
+  private readonly maxRecordingMs = 5000;
 
   constructor(private readonly planetNames: string[], private readonly languageCode: string = DEFAULT_LANGUAGE) {
     this.prepareAliases();
@@ -45,7 +58,7 @@ export class VoiceNavigationController {
     if (this.ui.button) {
       this.ui.button.addEventListener("click", () => {
         if (!this.enabled) {
-          this.notifyStatus("Voice control is disabled");
+          this.notifyStatus("Enable voice in settings first");
           return;
         }
         if (this.listening) {
@@ -126,10 +139,11 @@ export class VoiceNavigationController {
     });
 
     try {
-      this.recorder.start();
+      this.recorder.start(1000);
       this.listening = true;
       this.renderState();
       this.notifyStatus("Listening…");
+      this.armAutoStop();
     } catch (error) {
       this.handleError("Failed to start recorder", error);
     }
@@ -140,6 +154,7 @@ export class VoiceNavigationController {
       return;
     }
     try {
+      this.clearAutoStop();
       this.recorder.stop();
     } catch (error) {
       this.handleError("Failed to stop recorder", error);
@@ -179,10 +194,12 @@ export class VoiceNavigationController {
       this.updateTranscript(transcript);
       const intent = this.parseIntent(transcript, normalized);
       if (intent) {
-        eventBus.emit("voiceCommand", intent);
         this.notifyStatus(this.intentSummary(intent));
+        window.setTimeout(() => {
+          eventBus.emit("voiceCommand", intent);
+        }, 25);
       } else {
-        this.notifyStatus("Command not understood");
+        this.notifyStatus(`Did not understand: “${transcript}”`);
       }
     } catch (error) {
       this.handleError("Transcription failed", error);
@@ -208,6 +225,8 @@ export class VoiceNavigationController {
         audioBase64,
         mimeType: blob.type,
         languageCode: this.languageCode,
+        candidates: this.planetNames,
+        classify: true,
       }),
     });
 
@@ -217,11 +236,18 @@ export class VoiceNavigationController {
     }
 
     const data: TranscriptResponse = await response.json();
-    if (data.transcript) {
-      return data.transcript;
+    // Prefer server-provided intent if available
+    const serverIntent: any = (data as any).intent;
+    if (serverIntent && typeof serverIntent === "object" && serverIntent.type) {
+      const mapped: VoiceIntentEvent | null = this.mapServerIntent(serverIntent);
+      if (mapped) {
+        eventBus.emit("voiceCommand", mapped);
+      }
     }
-    if (Array.isArray(data.chunks)) {
-      return data.chunks.map((chunk) => chunk.text ?? "").join(" ").trim() || null;
+
+    const extracted = this.extractTranscript(data);
+    if (extracted) {
+      return extracted;
     }
     return null;
   }
@@ -251,7 +277,7 @@ export class VoiceNavigationController {
     if (openPhrase) {
       const candidate = this.cleanCandidate(openPhrase);
       const match = this.resolvePlanet(candidate);
-      if (match && match.score >= 0.55) {
+      if (match && match.score >= 0.45) {
         return {
           type: "open",
           target: match.name,
@@ -394,7 +420,7 @@ export class VoiceNavigationController {
     if (!this.enabled) {
       this.notifyStatus("Voice control off");
     } else if (!this.listening) {
-      this.notifyStatus("Voice control ready");
+      this.notifyStatus("Voice control ready – tap the mic and speak");
     }
   }
 
@@ -415,6 +441,7 @@ export class VoiceNavigationController {
     eventBus.emit("voiceError", { message, context: error });
     this.notifyStatus(message);
     this.listening = false;
+    this.clearAutoStop();
     this.renderState();
   }
 
@@ -437,5 +464,64 @@ export class VoiceNavigationController {
       binary += String.fromCharCode(bytes[i]);
     }
     return btoa(binary);
+  }
+
+  private armAutoStop(): void {
+    this.clearAutoStop();
+    this.stopTimer = window.setTimeout(() => {
+      this.stopRecording();
+    }, this.maxRecordingMs);
+  }
+
+  private clearAutoStop(): void {
+    if (this.stopTimer !== null) {
+      window.clearTimeout(this.stopTimer);
+      this.stopTimer = null;
+    }
+  }
+
+  private extractTranscript(data: TranscriptResponse): string | null {
+    if (!data) {
+      return null;
+    }
+    if (data.transcript && data.transcript.trim()) {
+      return data.transcript;
+    }
+    if (data.text && data.text.trim()) {
+      return data.text;
+    }
+    if (Array.isArray(data.words) && data.words.length > 0) {
+      return data.words.map((word) => word.text ?? "").join(" ").trim() || null;
+    }
+    if (Array.isArray(data.chunks) && data.chunks.length > 0) {
+      return data.chunks.map((chunk) => chunk.text ?? "").join(" ").trim() || null;
+    }
+    if (Array.isArray(data.segments) && data.segments.length > 0) {
+      return data.segments.map((segment) => segment.text ?? "").join(" ").trim() || null;
+    }
+    return null;
+  }
+
+  private mapServerIntent(si: any): VoiceIntentEvent | null {
+    const type = String(si.type || "").toLowerCase();
+    if (type === "open" && typeof si.target === "string") {
+      // trust server target if it matches a known body
+      const target = this.planetNames.find((p) => p.toLowerCase() === si.target.toLowerCase());
+      if (target) {
+        return {
+          type: "open",
+          target,
+          confidence: typeof si.confidence === "number" ? si.confidence : 0.9,
+          transcript: si.transcript || "",
+          normalized: si.normalized || "",
+        };
+      }
+    }
+    if (type === "next") return { type: "next", transcript: si.transcript || "", normalized: si.normalized || "" } as const;
+    if (type === "previous")
+      return { type: "previous", transcript: si.transcript || "", normalized: si.normalized || "" } as const;
+    if (type === "repeat") return { type: "repeat", transcript: si.transcript || "", normalized: si.normalized || "" } as const;
+    if (type === "stop") return { type: "stop", transcript: si.transcript || "", normalized: si.normalized || "" } as const;
+    return null;
   }
 }
