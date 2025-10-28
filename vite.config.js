@@ -5,6 +5,12 @@ export default {
   server: {
     host: true,
     open: false,
+    proxy: {
+      "/api": {
+        target: "http://localhost:4000",
+        changeOrigin: true,
+      },
+    },
   },
   build: {
     outDir: "../dist",

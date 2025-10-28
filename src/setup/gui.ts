@@ -1,6 +1,7 @@
 import * as dat from "lil-gui";
 import { SolarSystem } from "./solar-system";
 import { LAYERS } from "../constants";
+import { eventBus } from "../voice/eventBus";
 
 export const options = {
   showPaths: false,
@@ -10,6 +11,8 @@ export const options = {
   speed: 0.125,
   zangle: 0,
   yangle: 0,
+  voiceEnabled: false,
+  narrationEnabled: false,
 };
 
 export const createGUI = (
@@ -47,6 +50,20 @@ export const createGUI = (
 
   // Control the simulation speed
   gui.add(options, "speed", 0.1, 20, 0.1).name("Speed");
+
+  gui
+    .add(options, "voiceEnabled")
+    .name("Enable Voice")
+    .onChange((enabled: boolean) => {
+      eventBus.emit("voiceToggle", { enabled });
+    });
+
+  gui
+    .add(options, "narrationEnabled")
+    .name("Enable Narration")
+    .onChange((enabled: boolean) => {
+      eventBus.emit("narrationToggle", { enabled });
+    });
 
   gui.hide();
 

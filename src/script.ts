@@ -9,6 +9,8 @@ import { createLights } from "./setup/lights";
 import { createSolarSystem } from "./setup/solar-system";
 import { createGUI, options } from "./setup/gui";
 import { LAYERS } from "./constants";
+import { eventBus } from "./voice/eventBus";
+import { VoiceNavigationController } from "./voice/navigation";
 
 THREE.ColorManagement.enabled = false;
 
@@ -47,21 +49,6 @@ window.addEventListener("resize", () => {
   labelRenderer.setSize(sizes.width, sizes.height);
 });
 
-document.getElementById("btn-previous")?.addEventListener("click", () => {
-  const index = planetNames.indexOf(options.focus);
-  const newIndex = index === 0 ? planetNames.length - 1 : index - 1;
-  const focus = planetNames[newIndex];
-  changeFocus(options.focus, focus);
-  options.focus = focus;
-});
-
-document.getElementById("btn-next")?.addEventListener("click", () => {
-  const index = (planetNames.indexOf(options.focus) + 1) % planetNames.length;
-  const focus = planetNames[index];
-  changeFocus(options.focus, focus);
-  options.focus = focus;
-});
-
 // Solar system
 const [solarSystem, planetNames] = createSolarSystem(scene);
 
@@ -75,6 +62,35 @@ const changeFocus = (oldFocus: string, newFocus: string) => {
   solarSystem[newFocus].labels.showPOI();
   (document.querySelector(".caption p") as HTMLElement).innerHTML = newFocus;
 };
+
+const setFocus = (focus: string) => {
+  if (!solarSystem[focus]) {
+    console.warn(`[voice] Unknown focus target: ${focus}`);
+    return;
+  }
+  const previous = options.focus;
+  changeFocus(previous, focus);
+  options.focus = focus;
+  eventBus.emit("focusChanged", {
+    current: focus,
+    previous,
+  });
+};
+
+const focusPrevious = () => {
+  const index = planetNames.indexOf(options.focus);
+  const newIndex = index === 0 ? planetNames.length - 1 : index - 1;
+  setFocus(planetNames[newIndex]);
+};
+
+const focusNext = () => {
+  const index = (planetNames.indexOf(options.focus) + 1) % planetNames.length;
+  setFocus(planetNames[index]);
+};
+
+document.getElementById("btn-previous")?.addEventListener("click", focusPrevious);
+
+document.getElementById("btn-next")?.addEventListener("click", focusNext);
 
 // Camera
 const aspect = sizes.width / sizes.height;
@@ -130,6 +146,44 @@ fakeCamera.layers.enable(LAYERS.POILabel);
 
 // GUI
 createGUI(ambientLight, solarSystem, clock, fakeCamera);
+
+const voiceNavigation = new VoiceNavigationController(planetNames);
+voiceNavigation.attachUI({
+  button: document.getElementById("btn-voice") as HTMLButtonElement | null,
+  status: document.getElementById("voice-status"),
+  transcript: document.getElementById("voice-transcript"),
+  container: document.getElementById("voice-feedback"),
+});
+
+eventBus.on("voiceCommand", (intent) => {
+  switch (intent.type) {
+    case "open":
+      setFocus(intent.target);
+      break;
+    case "next":
+      focusNext();
+      break;
+    case "previous":
+      focusPrevious();
+      break;
+    case "repeat":
+      eventBus.emit("focusChanged", {
+        current: options.focus,
+        previous: options.focus,
+      });
+      break;
+    case "stop":
+      // Future: pause narration or other behaviours.
+      break;
+    default:
+      break;
+  }
+});
+
+eventBus.emit("focusChanged", {
+  current: options.focus,
+  previous: null,
+});
 
 (function tick() {
   elapsedTime += clock.getDelta() * options.speed;

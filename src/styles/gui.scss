@@ -43,3 +43,39 @@
 #btn-github {
   display: inline-block;
 }
+
+#btn-voice.is-active svg {
+  fill: #00d8ff;
+}
+
+#btn-voice:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.voice-feedback {
+  position: absolute;
+  top: 5.5rem;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  color: white;
+  text-align: center;
+  pointer-events: none;
+
+  p {
+    margin: 0;
+    font-size: 0.85rem;
+    opacity: 0.85;
+    max-width: min(90%, 480px);
+  }
+
+  span {
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    opacity: 0.72;
+  }
+}

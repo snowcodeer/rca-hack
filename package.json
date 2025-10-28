@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build"
+    "build": "vite build",
+    "stt-proxy": "node server/stt-proxy.js"
   },
   "devDependencies": {
     "@types/three": "^0.154.0",
