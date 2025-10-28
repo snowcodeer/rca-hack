@@ -83,7 +83,6 @@ Designed for museums, science centers, and classrooms, *Cosmon* turns astronomy 
 
 ## ⚙️ Getting Started
 
-### 1. Install Dependencies
 ```bash
 npm install
 2. (Optional) Configure Voice STT Proxy
